@@ -4,8 +4,8 @@ emJSON - JSON for embedded system
 _emJSON is a fast and memory efficient JSON library for embedded systems, written in C99_
 
 There are two libraries in this project:
-* `json_*`: Low-level JSON library that does not use dynamic memory allocation (e.g. malloc().)
-* `emJSON_*` : Easy-to-use JSON library that is built open `json_*` functions and make use of dynamic memory allocation.
+* `json.h`: Low-level JSON library that does not use dynamic memory allocation (e.g. malloc().)
+* `emJSON.h` : Easy-to-use JSON library that is built open `json.h` functions and make use of dynamic memory allocation.
 
 TODOs
 --------
@@ -24,12 +24,12 @@ TODOs
 Example
 -------
 
-### `emJSON_*`:
+### `emJSON.h`:
 ``` C
 TBD
 ```
 
-### `json_*`:
+### `json.h`:
 ``` C
 TBD
 ```
