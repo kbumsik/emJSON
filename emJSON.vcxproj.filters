@@ -26,6 +26,12 @@
     <ClCompile Include="emJSON.c">
       <Filter>Source files</Filter>
     </ClCompile>
+    <ClCompile Include="main.c">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="json.c">
+      <Filter>Source files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Makefile" />
@@ -41,5 +47,14 @@
     <None Include="emJSON-Release.vgdbsettings">
       <Filter>VisualGDB settings</Filter>
     </None>
+    <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="emJSON.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="json.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

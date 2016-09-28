@@ -64,13 +64,20 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="emJSON.c" />
+    <ClCompile Include="json.c" />
+    <ClCompile Include="main.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="debug.mak" />
     <None Include="emJSON-Debug.vgdbsettings" />
     <None Include="emJSON-Release.vgdbsettings" />
     <None Include="Makefile" />
+    <None Include="README.md" />
     <None Include="release.mak" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="emJSON.h" />
+    <ClInclude Include="json.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
