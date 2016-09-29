@@ -78,7 +78,6 @@ The algorithm is highly inspired by [Python's Dictionary implementation](http://
 TODOs
 --------
 
-* [ ] Set() functions
 * [ ] JSON encoding
 * [x] JSON decoding
 * [ ] Thread-safe

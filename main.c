@@ -51,13 +51,16 @@ int main(int argc, char *argv[])
     // More types test.
     emJSON_insert_float(&test, "float1", 4.9);
     emJSON_insert_float(&test, "float2", 0.023);
+    emJSON_set_float(&test, "float2", 999.999);
     emJSON_insert_float(&test, "float3", -0.00911);
     
     emJSON_insert_str(&test, "a", "JSON");
     emJSON_insert_str(&test, "i", "IS");
+    emJSON_set_str(&test, "i", "IS...!!~~!~!~!~!~!!~!!!?");
     emJSON_insert_str(&test, "q", "Cool");
     
     emJSON_insert_int(&test, "int1", 654);
+    emJSON_set_int(&test, "int1", 85989);
     emJSON_insert_int(&test, "int2", 17);
     emJSON_insert_int(&test, "int3", -68759);
     
@@ -72,6 +75,7 @@ int main(int argc, char *argv[])
     printf("%d\n", emJSON_get_int(&test, "int2"));
     printf("%d\n", emJSON_get_int(&test, "int3"));
     
+    // Non-exist keys
     printf("%d\n", emJSON_get_int(&test, "int?3"));
     printf("%f\n", emJSON_get_float(&test, "str??3"));
     printf("%s\n", emJSON_get_str(&test, "3int?"));

@@ -105,6 +105,38 @@ float emJSON_get_float(json_t *obj, char *key)
 }
 
 /*******************************************************************************
+ * Setter functions
+ ******************************************************************************/
+
+int emJSON_set(json_t *obj, char *key, void *value)
+{
+    return json_set(obj, key, value);
+}
+
+int emJSON_set_str(json_t *obj, char *key, char *value)
+{
+    int ret;
+    ret = json_set_str(obj, key, value);
+    // TODO: Increase size then entry_num/size = 3/4?
+    if (ret == JSON_ENTRY_BUFFER_FULL)
+    {
+        emJSON_delete(obj, key);
+        ret = emJSON_insert_str(obj, key, value);
+    }
+    return ret;
+}
+
+int emJSON_set_int(json_t *obj, char *key, int value)
+{
+    return json_set_int(obj, key, value);
+}
+
+int emJSON_set_float(json_t *obj, char *key, float value)
+{
+    return json_set_float(obj, key, value);
+}
+
+/*******************************************************************************
  * String-related functions
  ******************************************************************************/
 

@@ -158,6 +158,54 @@ char *json_get_str(json_t *obj, char *key)
 }
 
 /*******************************************************************************
+ * Setter functions
+ ******************************************************************************/
+
+int json_set(json_t *obj, char *key, void *value)
+{
+    int idx = _get_idx(obj, key);
+    if (idx >= 0)
+    {
+        json_entry_t *entry = obj->entry_table + idx;
+        memcpy(entry->value_ptr, value, entry->value_size);
+        return JSON_OK;
+    }
+    return JSON_ERROR;
+}
+
+int json_set_str(json_t *obj, char *key, char *value)
+{
+    // make temporary string. Length is multiples of 8.
+    int size = (((strlen(value) + 1) >> 3) + 1) << 3;
+    char str_tmp[size];
+    memset(str_tmp, 0, size);
+    strcpy(str_tmp, value);
+    
+    int idx = _get_idx(obj, key);
+    if (idx >= 0)
+    {
+        json_entry_t *entry = obj->entry_table + idx;
+        if (size > entry->value_size)
+        {
+            return JSON_ENTRY_BUFFER_FULL;
+        }
+        memcpy(entry->value_ptr, value, entry->value_size);
+        return JSON_OK;
+    }
+    return JSON_ERROR;
+}
+
+int json_set_int(json_t *obj, char *key, int value)
+{
+    return json_set(obj, key, &value);
+}
+
+int json_set_float(json_t *obj, char *key, float value)
+{
+    return json_set(obj, key, &value);
+}
+
+/*******************************************************************************
  * String-related functions
  ******************************************************************************/
 

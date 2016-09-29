@@ -14,7 +14,6 @@
 
 // high-level functions
 json_t emJSON_init();
-// int emJSON_set(json_t *obj, char *key, void *value); // TODO: Implement json_set()
 int emJSON_delete(json_t *obj, char *key);
 int emJSON_clear(json_t *obj);
 
@@ -29,6 +28,12 @@ void *emJSON_get(json_t *obj, char *key);
 char *emJSON_get_str(json_t *obj, char *key);
 int emJSON_get_int(json_t *obj, char *key);
 float emJSON_get_float(json_t *obj, char *key);
+
+// Setter functions
+int emJSON_set(json_t *obj, char *key, void *value);
+int emJSON_set_str(json_t *obj, char *key, char *value);
+int emJSON_set_int(json_t *obj, char *key, int value);
+int emJSON_set_float(json_t *obj, char *key, float value);
 
 // String-related functions
 char *emJSON_string(json_t *obj);
