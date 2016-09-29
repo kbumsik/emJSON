@@ -4,8 +4,7 @@
 json_t emJSON_init()
 {
     void *buffer = malloc(EMJSON_INIT_BUF_SIZE);
-    json_entry_t *table = (json_entry_t *)calloc(EMJSON_INIT_TABLE_SIZE, sizeof(json_entry_t));
-    json_t result = json_init(buffer, EMJSON_INIT_BUF_SIZE, table, EMJSON_INIT_TABLE_SIZE);
+    json_t result = json_init(buffer, EMJSON_INIT_BUF_SIZE, EMJSON_INIT_TABLE_SIZE);
     return result;
 }
 
@@ -30,25 +29,22 @@ int emJSON_insert(json_t *obj, char *key, void *value, json_value_e type)
     // TODO: Increase size then entry_num/size = 3/4?
     while (ret != JSON_OK)
     {
-        json_entry_t *new_table;
-        json_entry_t *old_table;
-        int table_size = obj->entry_size;
+        int table_size = obj->header->table_size;
         
         void *new_buf;
         void *old_buf;
-        int buf_size = obj->buf_size;
+        int buf_size = obj->header->buf_size;
         
         switch (ret)
         {
         case JSON_KEY_EXISTS:
             return JSON_KEY_EXISTS;
         case JSON_TABLE_FULL:
-            old_table = obj->entry_table;
-            table_size *= 2;
-            new_table = calloc(table_size, sizeof(json_entry_t));
-            json_replace_table(obj, new_table, table_size);
-            free(old_table);
-            ret = json_insert(obj, key, value, type);
+            ret = json_double_table(obj);
+            if (JSON_OK == ret)
+            {
+                ret = json_insert(obj, key, value, type);
+            }
             break;
         case JSON_BUFFER_FULL:
             old_buf = obj->buf;

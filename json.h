@@ -25,28 +25,34 @@ typedef enum
 
 typedef struct
 {
-    char *key;
-    int32_t hash;
-    size_t value_size;
-    void *value_ptr;
     json_value_e value_type;
+    int32_t hash;
+    void *value_ptr;
+    char *key;
+    size_t value_size;
 }json_entry_t;
 
 typedef struct
 {
     int buf_size;
-    void    *buf;
     size_t  buf_idx;
-    json_entry_t *entry_table;
-    size_t  entry_size;
+    size_t  table_size;
     int entry_count;
+}json_header_t;
+
+typedef struct
+{
+    void *buf;
+    json_header_t *header;
+    json_entry_t *entry_table;
+    void *content;
 }json_t;
 
 // core utility functions
 int32_t json_hash(char *str);
 
 // lower-level basic functions
-json_t json_init(void *buffer, size_t buf_size, json_entry_t table[], size_t table_size);
+json_t json_init(void *buffer, size_t buf_size, size_t table_size);
 int json_delete(json_t *obj, char *key);
 int json_clear(json_t *obj);
 
@@ -74,6 +80,7 @@ int json_strlen(json_t *obj);
 
 // Buffer and memory management functions
 int json_replace_buffer(json_t *obj, void *new_buf, size_t size);
-int json_replace_table(json_t *obj, json_entry_t new_table[], size_t size);
+int json_double_table(json_t *obj);
+json_t json_copy(void *dest_buf, json_t *obj);
 
 #endif  // __JSON_H__

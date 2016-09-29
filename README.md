@@ -81,6 +81,7 @@ TODOs
 * [ ] JSON encoding
 * [x] JSON decoding
 * [ ] Thread-safe
+* [ ] Data alignment
 * [x] Support String type
 * [x] Support Integer type
 * [x] Support Number type (floating point)

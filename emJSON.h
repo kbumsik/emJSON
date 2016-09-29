@@ -9,7 +9,7 @@
 #include "json.h"
 
 // Settings
-#define EMJSON_INIT_BUF_SIZE    64
+#define EMJSON_INIT_BUF_SIZE    256
 #define EMJSON_INIT_TABLE_SIZE  8
 
 // high-level functions

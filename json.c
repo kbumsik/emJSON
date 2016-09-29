@@ -8,6 +8,27 @@
 static int _get_idx(json_t *obj, char *key);
 static int _insert(json_t *obj, char *key, void *value, size_t size, json_value_e type);
 
+// in-line functions
+#define _buf_size(obj)  (obj->header->buf_size)
+
+#define _buf_idx(obj)   (obj->header->buf_idx)
+
+#define _table_size(obj)    (obj->header->table_size)
+
+#define _entry_count(obj)   (obj->header->entry_count)
+
+static inline int _table_byte_size(json_t *obj)
+{
+    return obj->header->table_size * sizeof(json_entry_t);
+}
+
+static inline int _content_byte_size(json_t *obj)
+{
+    return obj->header->buf_size - 
+        (sizeof(json_header_t) + obj->header->entry_count * sizeof(json_entry_t));
+}
+
+
 /*******************************************************************************
  * Core Utility functions
  ******************************************************************************/
@@ -31,20 +52,23 @@ int32_t json_hash(char *str)
  * lower-level basic functions
  ******************************************************************************/
 
-json_t json_init(void *buffer, size_t buf_size, json_entry_t table[], size_t table_size)
+json_t json_init(void *buffer, size_t buf_size, size_t table_size)
 {
-    json_t result = { 
+    // clear buffer
+    memset(buffer, 0, buf_size);
+    json_t new_obj = { 
         .buf = buffer,
+        .header = buffer,
+        .entry_table = buffer + sizeof(json_header_t),
+        .content = buffer + sizeof(json_header_t) + table_size * sizeof(json_entry_t)
+    };
+    *new_obj.header = (json_header_t){
         .buf_size = buf_size,
-        .buf_idx = 0,
-        .entry_table = table,
-        .entry_size = table_size,
+        .buf_idx = sizeof(json_header_t) + table_size * sizeof(json_entry_t),
+        .table_size = table_size,
         .entry_count = 0
     };
-    // Clean buffer
-    memset(buffer, 0, buf_size);
-    memset(table, 0, table_size * sizeof(json_entry_t));
-    return result;
+    return new_obj;
 }
 
 int json_delete(json_t *obj, char *key)
@@ -54,33 +78,38 @@ int json_delete(json_t *obj, char *key)
     {
         return JSON_NO_MATCHED_KEY;
     }
-    json_entry_t *table_original = obj->entry_table;
-    int table_size = obj->entry_size;
-    
-    // make a replicated table
-    json_entry_t table_tmp[table_size];
-    memcpy(table_tmp, table_original, table_size * sizeof(json_entry_t));
+    // make a replicated object
+    uint8_t buf_tmp[_buf_size(obj)];
+    json_t tmp_obj = json_copy(buf_tmp, obj);
     
     // erase selected entry in the replica and then replace it
-    memset((table_tmp + idx), 0, sizeof(json_entry_t));
-    obj->entry_table = table_tmp;
-        
+    memset((tmp_obj.entry_table + idx), 0, sizeof(json_entry_t));
+
     // Clear original table and replace it again
-    memset(table_original, 0, table_size * sizeof(json_entry_t));
-    json_replace_table(obj, table_original, table_size);
+    json_clear(obj);
+    
+    for (int i = 0; i < tmp_obj.header->table_size; i++)
+    {
+        json_entry_t *entry = (tmp_obj.entry_table + i);
+        if (NULL == entry->key)
+        {
+            continue;
+        }
+        json_insert(obj, entry->key, entry->value_ptr, entry->value_type);
+    }
     
     return JSON_OK;
 }
 
 int json_clear(json_t *obj)
 {
-    // clear buffer
-    memset(obj->buf, 0, obj->buf_size * sizeof(uint8_t));
-    obj->buf_idx = 0;
+    // clear content
+    memset(obj->content, 0, _content_byte_size(obj));
+    _buf_idx(obj) = sizeof(json_header_t) + _table_size(obj) * sizeof(json_entry_t);
     
     // clear table
-    memset(obj->entry_table, 0, obj->entry_size * sizeof(json_entry_t));
-    obj->entry_count = 0;
+    memset(obj->entry_table, 0, _table_byte_size(obj));
+    _entry_count(obj) = 0;
     return JSON_OK;
 }
 
@@ -216,7 +245,7 @@ int json_strcpy(char *dest, json_t *obj)
     memset(dest + idx, '{', 1);
     idx += 1;
     // start
-    for (int i = 0; i < obj->entry_size; i++)
+    for (int i = 0; i < _table_size(obj); i++)
     {
         json_entry_t entry = obj->entry_table[i];
         if (NULL == entry.key)
@@ -264,7 +293,7 @@ int json_strlen(json_t *obj)
     int idx = 0;
     idx += 1;	// '{'
     // start
-    for (int i = 0; i < obj->entry_size; i++)
+    for (int i = 0; i < _table_size(obj); i++)
     {
         json_entry_t entry = obj->entry_table[i];
         if (NULL == entry.key)
@@ -307,11 +336,7 @@ int json_replace_buffer(json_t *obj, void *new_buf, size_t size)
 {
     void *old_buf = obj->buf;
     int offset = new_buf - old_buf;
-    
-    memcpy(new_buf, old_buf, obj->buf_idx);
-    
-    // move key and value pointers
-    for (int i = 0; i < obj->entry_size; i++)
+    for (int i = 0; i < _table_size(obj); i++)
     {
         json_entry_t *entry = (obj->entry_table + i);
         if (NULL == entry->key)
@@ -321,21 +346,34 @@ int json_replace_buffer(json_t *obj, void *new_buf, size_t size)
         entry->key += offset;
         entry->value_ptr += offset;
     }
+    // clear buffer first then copy
+    memset(new_buf, 0, size);
+    memcpy(new_buf, old_buf, _buf_idx(obj));
     
-    // finally change the buffer
-    obj->buf = new_buf;
-    obj->buf_size = size;
+    // move pointers
+    obj->buf = new_buf; // FIX here
+    obj->header = new_buf;
+    obj->entry_table = new_buf + sizeof(json_header_t);
+    obj->content = new_buf + sizeof(json_header_t) + size * sizeof(json_entry_t);
+    
+    // Confirm
+    _buf_size(obj) = size;
     return JSON_OK;
 }
 
 
-int json_replace_table(json_t *obj, json_entry_t new_table[], size_t size)
+int json_double_table(json_t *obj)
 {
+    // Check if the buffer is big enough
+    if (_buf_size(obj) - _buf_idx(obj) < _table_byte_size(obj))
+    {
+        return JSON_BUFFER_FULL;
+    }
     // create a temp JSON object
-    uint8_t tmp_buf[obj->buf_idx];
-    json_t tmp_obj = json_init(tmp_buf, obj->buf_idx, new_table, size);
+    uint8_t tmp_buf[_buf_size(obj)];
+    json_t tmp_obj = json_init(tmp_buf, _buf_size(obj), _table_size(obj) * 2);
     
-    for (int i = 0; i < obj->entry_size; i++)
+    for (int i = 0; i < _table_size(obj); i++)
     {
         json_entry_t *entry = (obj->entry_table + i);
         if (NULL == entry->key)
@@ -345,15 +383,36 @@ int json_replace_table(json_t *obj, json_entry_t new_table[], size_t size)
         json_insert(&tmp_obj, entry->key, entry->value_ptr, entry->value_type);
     }
     // Then replace buffer
-    memset(obj->buf, 0, obj->buf_idx);
-    json_replace_buffer(&tmp_obj, obj->buf, obj->buf_size);
+    json_replace_buffer(&tmp_obj, obj->buf, _buf_size(obj));
     
     // Then replace table
-    obj->buf_idx = tmp_obj.buf_idx;
-    obj->entry_table = new_table;
-    obj->entry_size = size;
-    obj->entry_count = tmp_obj.entry_count;
+    obj->buf = tmp_obj.buf;
+    obj->entry_table = tmp_obj.entry_table;
+    obj->header = tmp_obj.header;
+    obj->content = tmp_obj.content;
     return JSON_OK;
+}
+
+json_t json_copy(void *dest_buf, json_t *obj)
+{
+    int offset = dest_buf - obj->buf;
+    memcpy(dest_buf, obj->buf, _buf_size(obj));
+    json_t new_obj = { 
+        .buf = dest_buf,
+        .header = dest_buf,
+        .entry_table = dest_buf + sizeof(json_header_t),
+        .content = dest_buf + sizeof(json_header_t) + _table_byte_size(&new_obj)
+    };
+    for (int i = 0; i < _table_size(obj); i++)
+    {
+        if (NULL == obj->entry_table[i].key)
+        {
+            continue;
+        }
+        new_obj.entry_table[i].key += offset;
+        new_obj.entry_table[i].value_ptr += offset;
+    }
+    return new_obj;
 }
 
 /*******************************************************************************
@@ -363,12 +422,12 @@ int json_replace_table(json_t *obj, json_entry_t new_table[], size_t size)
 static int _get_idx(json_t *obj, char *key)
 {
     int32_t hash = json_hash(key);
-    int idx = hash & (obj->entry_size - 1);
+    int idx = hash & (_table_size(obj) - 1);
     json_entry_t entry;
     
     // variables for open addressing
     int perturb = hash;
-    uint8_t checked[obj->entry_size];
+    uint8_t checked[_table_size(obj)];
     int count = 0;
     
     // Search start
@@ -379,13 +438,13 @@ static int _get_idx(json_t *obj, char *key)
     }
     
     // On collision
-    memset(checked, 0, obj->entry_size);
+    memset(checked, 0, _table_size(obj));
     while (hash != entry.hash)
     {
         if (0 == checked[idx])
         {
             count++;
-            if (count >= obj->entry_size)
+            if (count >= _table_size(obj))
             {   // When the table is full and visited all entries
                 goto end_error;
             }
@@ -397,7 +456,7 @@ static int _get_idx(json_t *obj, char *key)
         // open addressing
         idx = (5 * idx) + 1 + perturb;
         perturb >>= PERTURB_SHIFT;
-        idx = idx & (obj->entry_size - 1);
+        idx = idx & (_table_size(obj) - 1);
         // refresh
         entry = obj->entry_table[idx];
     }
@@ -410,7 +469,7 @@ end_error:
 
 static int _insert(json_t *obj, char *key, void *value, size_t size, json_value_e type)
 {
-    if (obj->entry_count >= obj->entry_size)
+    if (_entry_count(obj) >= _table_size(obj))
     {
         return JSON_TABLE_FULL;
     }
@@ -419,7 +478,7 @@ static int _insert(json_t *obj, char *key, void *value, size_t size, json_value_
     int key_size = strlen(key) + 1;
     int value_size = size + 1;
     int buf_required = key_size + value_size;
-    if (obj->buf_idx + buf_required > obj->buf_size)
+    if (_buf_idx(obj) + buf_required > _buf_size(obj))
     {
         return JSON_BUFFER_FULL;
     }
@@ -429,7 +488,7 @@ static int _insert(json_t *obj, char *key, void *value, size_t size, json_value_
     new_entry.hash = json_hash(key);
     
     // put into the table
-    int32_t new_idx = new_entry.hash & (obj->entry_size - 1);
+    int32_t new_idx = new_entry.hash & (_table_size(obj) - 1);
     
     int perturb = new_entry.hash;
     while (NULL != (obj->entry_table[new_idx].key))
@@ -440,26 +499,26 @@ static int _insert(json_t *obj, char *key, void *value, size_t size, json_value_
         }
         new_idx = (5 * new_idx) + 1 + perturb;
         perturb >>= PERTURB_SHIFT;
-        new_idx = new_idx & (obj->entry_size - 1);
+        new_idx = new_idx & (_table_size(obj) - 1);
     }
     
     // then put key into the buffer
-    void *key_ptr = obj->buf + obj->buf_idx;
+    void *key_ptr = obj->buf + _buf_idx(obj);
     strcpy((char *)key_ptr, key);
     new_entry.key = key_ptr;
-    obj->buf_idx += key_size;
+    _buf_idx(obj) += key_size;
     
     // put value into the buffer
-    void *value_ptr = obj->buf + obj->buf_idx;
+    void *value_ptr = obj->buf + _buf_idx(obj);
     memcpy(value_ptr, value, size);
     new_entry.value_ptr = value_ptr;
-    obj->buf_idx += value_size;
+    _buf_idx(obj) += value_size;
     
     // Put the new entry
     new_entry.value_type = type;
     new_entry.value_size = value_size;
     obj->entry_table[new_idx] = new_entry;
     
-    obj->entry_count += 1;
+    _entry_count(obj) += 1;
     return JSON_OK;
 }
