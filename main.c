@@ -13,22 +13,47 @@ int main(int argc, char *argv[])
     printf("%d\n", json_hash("TestH") & 7);
     
     json_t test = emJSON_init();
+    
+    // Addition, deletion, retrieval test
     emJSON_insert(&test, "a", "JSON");
     emJSON_insert(&test, "i", "IS");
     emJSON_insert(&test, "q", "Cool");
+    emJSON_insert(&test, "TestJ", "Should not appear");
     emJSON_insert(&test, "TestH", "Test Good?");
-    
+    emJSON_delete(&test, "TestJ");
+    emJSON_insert(&test, "TestI", "Really??");
+    emJSON_insert(&test, "TestK", "Really? again???");
     printf("%s\n", emJSON_get(&test, "a"));
     printf("%s\n", emJSON_get(&test, "i"));
     printf("%s\n", emJSON_get(&test, "q"));
     printf("%s\n", emJSON_get(&test, "TestH"));
     printf("%s\n", emJSON_get(&test, "TestI"));
+    printf("%s\n", emJSON_get(&test, "TestJ"));
+    printf("%s\n", emJSON_get(&test, "TestK"));
     char *str = emJSON_string(&test);
     printf("%d\n", json_strlen(&test));
     printf("%d\n", strlen(str));
     
     printf("%s\n", str);
     free(str);
+    
+    // clear test
+    emJSON_clear(&test);
+    printf("%s\n", emJSON_get(&test, "a"));
+    printf("%s\n", emJSON_get(&test, "i"));
+    printf("%s\n", emJSON_get(&test, "q"));
+    printf("%s\n", emJSON_get(&test, "TestH"));
+    printf("%s\n", emJSON_get(&test, "TestI"));
+    printf("%s\n", emJSON_get(&test, "TestJ"));
+    printf("%s\n", emJSON_get(&test, "TestK"));
+    
+    emJSON_insert(&test, "a", "JSON");
+    emJSON_insert(&test, "i", "IS");
+    emJSON_insert(&test, "q", "Cool");
+    printf("%s\n", emJSON_get(&test, "a"));
+    printf("%s\n", emJSON_get(&test, "i"));
+    printf("%s\n", emJSON_get(&test, "q"));
+    
     emJSON_free(&test);
     return 0;
 }

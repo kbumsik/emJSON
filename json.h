@@ -4,11 +4,12 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define JSON_OK         0
-#define JSON_KEY_EXISTS	1
-#define JSON_TABLE_FULL	2
-#define JSON_BUFFER_FULL 3
-#define JSON_ERROR      4   // Unknown error
+#define JSON_OK             0
+#define JSON_ERROR          -1   // Unknown error
+#define JSON_NO_MATCHED_KEY	-2
+#define JSON_KEY_EXISTS	    -3
+#define JSON_TABLE_FULL	    -4
+#define JSON_BUFFER_FULL    -5
 
 typedef enum
 {
@@ -24,8 +25,8 @@ typedef enum
 typedef struct
 {
     char *key;
-    size_t size;
     int32_t hash;
+    size_t value_size;
     void *value_ptr;
     //json_value_e value_type;
 }json_entry_t;
@@ -47,7 +48,7 @@ int32_t json_hash(char *str);
 json_t json_init(void *buffer, size_t buf_size, json_entry_t table[], size_t table_size);
 int json_insert(json_t *obj, char *key, void *value);
 void *json_get(json_t *obj, char *key);
-int json_set(json_t *obj, char *key, void *value);
+// int json_set(json_t *obj, char *key, void *value); // TODO: Implement json_set()
 int json_delete(json_t *obj, char *key);
 int json_clear(json_t *obj);
 

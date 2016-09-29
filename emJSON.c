@@ -1,10 +1,11 @@
 #include "emJSON.h"
+#include <string.h>
 
 json_t emJSON_init()
 {
-    void *buffer = malloc(64);
-    json_entry_t *table = (json_entry_t *)calloc(2, sizeof(json_entry_t));
-    json_t result = json_init(buffer, 64, table, 2);
+    void *buffer = malloc(EMJSON_INIT_BUF_SIZE);
+    json_entry_t *table = (json_entry_t *)calloc(EMJSON_INIT_TABLE_SIZE, sizeof(json_entry_t));
+    json_t result = json_init(buffer, EMJSON_INIT_BUF_SIZE, table, EMJSON_INIT_TABLE_SIZE);
     return result;
 }
 
@@ -37,7 +38,7 @@ int emJSON_insert(json_t *obj, char *key, void *value)
             break;
         case JSON_BUFFER_FULL:
             old_buf = obj->buf;
-            buf_size += 16;
+            buf_size += 32;
             new_buf = malloc(buf_size);
             json_replace_buffer(obj, new_buf, buf_size);
             free(old_buf);
@@ -55,6 +56,16 @@ void *emJSON_get(json_t *obj, char *key)
     return json_get(obj, key);
 }
 
+int emJSON_delete(json_t *obj, char *key)
+{
+    return json_delete(obj, key);
+}
+
+int emJSON_clear(json_t *obj)
+{
+    return json_clear(obj);
+}
+
 char *emJSON_string(json_t *obj)
 {
     int len = json_strlen(obj) + 1;
@@ -69,5 +80,7 @@ int emJSON_free(json_t *obj)
     free(obj->entry_table);
     // free buffer
     free(obj->buf);
+    // Clear
+    memset(obj, 0, sizeof(json_t));
     return 0;
 }

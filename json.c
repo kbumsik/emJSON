@@ -3,6 +3,13 @@
 
 #define PERTURB_SHIFT 5
 
+// Private functions
+static int _get_idx(json_t *obj, char *key);
+
+/*******************************************************************************
+ * Core Utility functions
+ ******************************************************************************/
+
 int32_t json_hash(char *str)
 {
     char *ptr = str;
@@ -17,6 +24,10 @@ int32_t json_hash(char *str)
     result ^= len;
     return result;	
 }
+
+/*******************************************************************************
+ * lower-level basic functions
+ ******************************************************************************/
 
 json_t json_init(void *buffer, size_t buf_size, json_entry_t table[], size_t table_size)
 {
@@ -42,7 +53,9 @@ int json_insert(json_t *obj, char *key, void *value)
     }
     
     // buffer size check
-    int buf_required = (strlen(key) + 1) + (strlen(value) + 1);
+    int key_size = strlen(key) + 1;
+    int value_size = strlen(value) + 1;
+    int buf_required = key_size + value_size;
     if (obj->buf_idx + buf_required > obj->buf_size)
     {
         return JSON_BUFFER_FULL;
@@ -71,15 +84,16 @@ int json_insert(json_t *obj, char *key, void *value)
     void *key_ptr = obj->buf + obj->buf_idx;
     strcpy((char *)key_ptr, key);
     new_entry.key = key_ptr;
-    obj->buf_idx += strlen(key_ptr) + 1;
+    obj->buf_idx += key_size;
     
     // put value into the buffer
     void *value_ptr = obj->buf + obj->buf_idx;
     strcpy((char *)value_ptr, (char *)value);
     new_entry.value_ptr = value_ptr;
-    obj->buf_idx += strlen(value_ptr) + 1;
+    obj->buf_idx += value_size;
     
     // Put the new entry
+    new_entry.value_size = value_size;
     obj->entry_table[new_idx] = new_entry;
     
     obj->entry_count += 1;
@@ -88,50 +102,54 @@ int json_insert(json_t *obj, char *key, void *value)
 
 void *json_get(json_t *obj, char *key)
 {
-    void *result;
-    int32_t hash = json_hash(key);
-    int idx = hash & (obj->entry_size - 1);
-    json_entry_t entry = obj->entry_table[idx];
-    
-    // variables for open addressing
-    int perturb = hash;
-    uint8_t checked[obj->entry_size];
-    int count = 0;
-    
-    if (hash == entry.hash)
-    {   // Good
-        goto end_success;
-    }
-    
-    // On collision
-    memset(checked, 0, obj->entry_size);
-    while (hash != entry.hash)
+    int idx = _get_idx(obj, key);
+    if (idx >= 0)
     {
-        if (0 == checked[idx])
-        {
-            count++;
-            if (count >= obj->entry_size)
-            {   // When the table is full and visited all entries
-                goto end_error;
-            }
-        }
-        if (NULL == entry.hash)
-        {   // When we get empty slot
-            goto end_error;
-        }
-        // open addressing
-        idx = (5 * idx) + 1 + perturb;
-        perturb >>= PERTURB_SHIFT;
-        idx = idx & (obj->entry_size - 1);
-        // refresh
-        entry = obj->entry_table[idx];
+        return obj->entry_table[idx].value_ptr;
     }
-end_success:
-    result = entry.value_ptr;
-    return result;
-end_error:
     return NULL;
 }
+
+int json_delete(json_t *obj, char *key)
+{
+    int idx = _get_idx(obj, key);
+    if (idx < 0)
+    {
+        return JSON_NO_MATCHED_KEY;
+    }
+    json_entry_t *table_original = obj->entry_table;
+    int table_size = obj->entry_size;
+    
+    // make a replicated table
+    json_entry_t table_tmp[table_size];
+    memcpy(table_tmp, table_original, table_size * sizeof(json_entry_t));
+    
+    // erase selected entry in the replica and then replace it
+    memset((table_tmp + idx), 0, sizeof(json_entry_t));
+    obj->entry_table = table_tmp;
+        
+    // Clear original table and replace it again
+    memset(table_original, 0, table_size * sizeof(json_entry_t));
+    json_replace_table(obj, table_original, table_size);
+    
+    return JSON_OK;
+}
+
+int json_clear(json_t *obj)
+{
+    // clear buffer
+    memset(obj->buf, 0, obj->buf_size * sizeof(uint8_t));
+    obj->buf_idx = 0;
+    
+    // clear table
+    memset(obj->entry_table, 0, obj->entry_size * sizeof(json_entry_t));
+    obj->entry_count = 0;
+    return JSON_OK;
+}
+
+/*******************************************************************************
+ * String-related functions
+ ******************************************************************************/
 
 int json_strcpy(char *dest, json_t *obj)
 {
@@ -193,6 +211,10 @@ int json_strlen(json_t *obj)
     return idx;
 }
 
+/*******************************************************************************
+ * Buffer and memory management functions
+ ******************************************************************************/
+
 int json_replace_buffer(json_t *obj, void *new_buf, size_t size)
 {
     void *old_buf = obj->buf;
@@ -239,7 +261,60 @@ int json_replace_table(json_t *obj, json_entry_t new_table[], size_t size)
     json_replace_buffer(&tmp_obj, obj->buf, obj->buf_size);
     
     // Then replace table
+    obj->buf_idx = tmp_obj.buf_idx;
     obj->entry_table = new_table;
     obj->entry_size = size;
+    obj->entry_count = tmp_obj.entry_count;
     return JSON_OK;
+}
+
+/*******************************************************************************
+ * Private functions
+ ******************************************************************************/
+
+static int _get_idx(json_t *obj, char *key)
+{
+    int32_t hash = json_hash(key);
+    int idx = hash & (obj->entry_size - 1);
+    json_entry_t entry;
+    
+    // variables for open addressing
+    int perturb = hash;
+    uint8_t checked[obj->entry_size];
+    int count = 0;
+    
+    // Search start
+    entry = obj->entry_table[idx];
+    if (hash == entry.hash)
+    {   // Good
+        goto end_success;
+    }
+    
+    // On collision
+    memset(checked, 0, obj->entry_size);
+    while (hash != entry.hash)
+    {
+        if (0 == checked[idx])
+        {
+            count++;
+            if (count >= obj->entry_size)
+            {   // When the table is full and visited all entries
+                goto end_error;
+            }
+        }
+        if (NULL == entry.key)
+        {   // When we get empty slot
+            goto end_error;
+        }
+        // open addressing
+        idx = (5 * idx) + 1 + perturb;
+        perturb >>= PERTURB_SHIFT;
+        idx = idx & (obj->entry_size - 1);
+        // refresh
+        entry = obj->entry_table[idx];
+    }
+end_success:
+    return idx;
+end_error:
+    return JSON_NO_MATCHED_KEY;
 }
