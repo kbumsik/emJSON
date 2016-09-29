@@ -83,12 +83,12 @@ TODOs
 * [x] JSON decoding
 * [ ] Thread-safe
 * [x] Support String type
-* [ ] Support Integer type
-* [ ] Support Number type (floating point)
+* [x] Support Integer type
+* [x] Support Number type (floating point)
+* [ ] Support object type
 * [ ] Support Boolean literals (true, false)
 * [ ] Support Null literal (null)
 * [ ] Support array type
-* [ ] Support object type
 
 Limitations
 -----------

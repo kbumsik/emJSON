@@ -13,9 +13,9 @@
 
 typedef enum
 {
-    //integer,
-    //number,
-    string
+    JSON_INT,
+    JSON_FLOAT,
+    JSON_STRING
     //object,
     //array,
     //boolean,
@@ -28,7 +28,7 @@ typedef struct
     int32_t hash;
     size_t value_size;
     void *value_ptr;
-    //json_value_e value_type;
+    json_value_e value_type;
 }json_entry_t;
 
 typedef struct
@@ -46,11 +46,21 @@ int32_t json_hash(char *str);
 
 // lower-level basic functions
 json_t json_init(void *buffer, size_t buf_size, json_entry_t table[], size_t table_size);
-int json_insert(json_t *obj, char *key, void *value);
-void *json_get(json_t *obj, char *key);
 // int json_set(json_t *obj, char *key, void *value); // TODO: Implement json_set()
 int json_delete(json_t *obj, char *key);
 int json_clear(json_t *obj);
+
+// Insertion functions
+int json_insert(json_t *obj, char *key, char *value, json_value_e type);
+int json_insert_str(json_t *obj, char *key, char *value);
+int json_insert_int(json_t *obj, char *key, int32_t value);
+int json_insert_float(json_t *obj, char *key, float value);
+
+// Getter functions
+void *json_get(json_t *obj, char *key);
+char *json_get_str(json_t *obj, char *key);
+int json_get_int(json_t *obj, char *key);
+float json_get_float(json_t *obj, char *key);
 
 // String-related functions
 int json_strcpy(char *dest, json_t *obj);
