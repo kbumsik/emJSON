@@ -68,6 +68,7 @@
     <ClCompile Include="main.c" />
   </ItemGroup>
   <ItemGroup>
+    <None Include=".gitignore" />
     <None Include="debug.mak" />
     <None Include="emJSON-Debug.vgdbsettings" />
     <None Include="emJSON-Release.vgdbsettings" />

@@ -8,14 +8,15 @@
 #define JSON_KEY_EXISTS	1
 #define JSON_TABLE_FULL	2
 #define JSON_BUFFER_FULL 3
+#define JSON_ERROR      4   // Unknown error
 
 typedef enum
 {
     //integer,
     //number,
     string
-    //obejct,
-    //arrary,
+    //object,
+    //array,
     //boolean,
     //null_value
 }json_value_e;
@@ -39,17 +40,23 @@ typedef struct
     int entry_count;
 }json_t;
 
-// lower-level functions
-json_t json_init(void *buffer, size_t buf_size, json_entry_t *table, size_t table_size);
+// core utility functions
+int32_t json_hash(char *str);
+
+// lower-level basic functions
+json_t json_init(void *buffer, size_t buf_size, json_entry_t table[], size_t table_size);
 int json_insert(json_t *obj, char *key, void *value);
 void *json_get(json_t *obj, char *key);
 int json_set(json_t *obj, char *key, void *value);
-int json_delete(json_t *obj, char *key, void *value);
-int json_replace_buffer(void);
-int json_strcpy(char *dest, json_t *obj);
+int json_delete(json_t *obj, char *key);
+int json_clear(json_t *obj);
 
-// utility functions
-int32_t json_hash(char *str);
+// String-related functions
+int json_strcpy(char *dest, json_t *obj);
 int json_strlen(json_t *obj);
+
+// Buffer and memory management functions
+int json_replace_buffer(json_t *obj, void *new_buf, size_t size);
+int json_replace_table(json_t *obj, json_entry_t new_table[], size_t size);
 
 #endif  // __JSON_H__

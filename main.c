@@ -11,6 +11,7 @@ int main(int argc, char *argv[])
     printf("%d\n", json_hash("i") & 7);
     printf("%d\n", json_hash("q") & 7);
     printf("%d\n", json_hash("TestH") & 7);
+    
     json_t test = emJSON_init();
     emJSON_insert(&test, "a", "JSON");
     emJSON_insert(&test, "i", "IS");
@@ -21,6 +22,7 @@ int main(int argc, char *argv[])
     printf("%s\n", emJSON_get(&test, "i"));
     printf("%s\n", emJSON_get(&test, "q"));
     printf("%s\n", emJSON_get(&test, "TestH"));
+    printf("%s\n", emJSON_get(&test, "TestI"));
     char *str = emJSON_string(&test);
     printf("%d\n", json_strlen(&test));
     printf("%d\n", strlen(str));
@@ -38,4 +40,4 @@ int main(int argc, char *argv[])
     "q":"Cool"
 }
 */
-	
+    

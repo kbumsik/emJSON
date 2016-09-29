@@ -101,5 +101,6 @@ Limitations
 Because it does not use dynamic memory allocations there are serveral limitation:
 
 * buffer should be big enough that it does not have overflow.
-* json entry size is not auto-resizable. Therefore use big enough json entry table.
+* json entry size is not auto-resizable. Therefore use big enough json entry table, or `json_replace_buffer()` to move to a bigger buffer.
 * The json entry size SHOULD be a power of 2. (e.g. 2, 4, 8, 16...)
+* Buffer size of string value is a multiple of 8. If you change string value over than string buffer size, run `json_remove()` then `json_insert()`.

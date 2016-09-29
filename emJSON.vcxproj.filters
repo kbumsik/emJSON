@@ -48,6 +48,7 @@
       <Filter>VisualGDB settings</Filter>
     </None>
     <None Include="README.md" />
+    <None Include=".gitignore" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="emJSON.h">
