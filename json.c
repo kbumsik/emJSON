@@ -17,6 +17,9 @@ static int _insert(json_t *obj, char *key, void *value, size_t size, json_value_
 
 #define _entry_count(obj)   (obj->header->entry_count)
 
+#define _content_ptr(obj) (obj->buf + sizeof(json_header_t) + _table_byte_size(obj))
+
+
 static inline int _table_byte_size(json_t *obj)
 {
     return obj->header->table_size * sizeof(json_entry_t);
@@ -64,8 +67,7 @@ json_t json_init(void *buffer, size_t buf_size, size_t table_size)
     json_t new_obj = { 
         .buf = buffer,
         .header = buffer,
-        .entry_table = buffer + sizeof(json_header_t),
-        .content = buffer + sizeof(json_header_t) + table_size * sizeof(json_entry_t)
+        .entry_table = buffer + sizeof(json_header_t)
     };
     *new_obj.header = (json_header_t){
         .buf_size = buf_size,
@@ -109,7 +111,7 @@ int json_delete(json_t *obj, char *key)
 int json_clear(json_t *obj)
 {
     // clear content
-    memset(obj->content, 0, _content_byte_size(obj));
+    memset(_content_ptr(obj), 0, _content_byte_size(obj));
     _buf_idx(obj) = sizeof(json_header_t) + _table_size(obj) * sizeof(json_entry_t);
     
     // clear table
@@ -359,7 +361,6 @@ int json_replace_buffer(json_t *obj, void *new_buf, size_t size)
     obj->buf = new_buf; // FIX here
     obj->header = new_buf;
     obj->entry_table = new_buf + sizeof(json_header_t);
-    obj->content = new_buf + sizeof(json_header_t) + size * sizeof(json_entry_t);
     
     // Confirm
     _buf_size(obj) = size;
@@ -394,7 +395,6 @@ int json_double_table(json_t *obj)
     obj->buf = tmp_obj.buf;
     obj->entry_table = tmp_obj.entry_table;
     obj->header = tmp_obj.header;
-    obj->content = tmp_obj.content;
     return JSON_OK;
 }
 
@@ -405,8 +405,7 @@ json_t json_copy(void *dest_buf, json_t *obj)
     json_t new_obj = { 
         .buf = dest_buf,
         .header = dest_buf,
-        .entry_table = dest_buf + sizeof(json_header_t),
-        .content = dest_buf + sizeof(json_header_t) + _table_byte_size(obj)
+        .entry_table = dest_buf + sizeof(json_header_t)
     };
     for (int i = 0; i < _table_size(obj); i++)
     {
