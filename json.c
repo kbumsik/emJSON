@@ -54,6 +54,11 @@ int32_t json_hash(char *str)
 
 json_t json_init(void *buffer, size_t buf_size, size_t table_size)
 {
+    // Check if the buffer size is enough
+    if (buf_size < (sizeof(json_header_t) + table_size * sizeof(json_entry_t)))
+    {
+        return (json_t){0};
+    }
     // clear buffer
     memset(buffer, 0, buf_size);
     json_t new_obj = { 
@@ -497,7 +502,7 @@ static int _insert(json_t *obj, char *key, void *value, size_t size, json_value_
         {	// collision, and the hash are the same (same key)
             return JSON_KEY_EXISTS;
         }
-        new_idx = (5 * new_idx) + 1 + perturb;
+        new_idx = (new_idx << 2) + new_idx + 1 + perturb;
         perturb >>= PERTURB_SHIFT;
         new_idx = new_idx & (_table_size(obj) - 1);
     }

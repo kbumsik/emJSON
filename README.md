@@ -22,50 +22,56 @@ Examples
 ### emJSON.h:
 ``` C
 json_t test = emJSON_init();
-emJSON_insert(&test, "entry_1", "JSON");
-emJSON_insert(&test, "entry_2", "Is");
-emJSON_insert(&test, "entry_3", "Cool");
-
-printf("%s\n", emJSON_get(&test, "entry_1"));
-printf("%s\n", emJSON_get(&test, "entry_2"));
-printf("%s\n", emJSON_get(&test, "entry_3"));
+emJSON_insert_str(&test, "string", "JSON Is Cool");
+emJSON_insert_int(&test, "integer", 142);
+emJSON_insert_float(&test, "float", 0.0456);
 
 char *str = emJSON_string(&test);
 printf("%s\n", str);
 free(str);
-emJSON_free(&test);
 
 /*
-JSON
-Is
-Cool
-{"entry_2":"Is","entry_3":"Cool","entry_1":"JSON"}
+{"integer":142,"float":0.045600,"string":"JSON Is Cool"}
+ */
+
+printf("%s\n", emJSON_get_str(&test, "string"));
+printf("%d\n", emJSON_get_int(&test, "integer"));
+printf("%f\n", emJSON_get_float(&test, "float"));
+
+/*
+JSON Is Cool
+142
+0.045600
 */
+emJSON_free(&test);
+
 ```
 
 ### json.h:
 ``` C
-char buf[80];
-json_entry_t table[8];
+char buf[150];
 
-json_t test = json_init(buf, 80, table, 8);
-json_insert(&test, "entry_1", "JSON");
-json_insert(&test, "entry_2", "Is");
-json_insert(&test, "entry_3", "Cool");
+json_t test = json_init(buf, 256, 4);  // 8 is table size
+json_insert_str(&test, "string", "JSON Is Cool");
+json_insert_int(&test, "integer", 142);
+json_insert_float(&test, "float", 0.0456);
 
-printf("%s\n", json_get(&test, "entry_1"));
-printf("%s\n", json_get(&test, "entry_2"));
-printf("%s\n", json_get(&test, "entry_3"));
-
-char str[50];
+char str[60];
 json_strcpy(str, &test);
 printf("%s\n", str);
 
 /*
-JSON
-Is
-Cool
-{"entry_2":"Is","entry_3":"Cool","entry_1":"JSON"}
+{"float":0.045600,"string":"JSON Is Cool","integer":142}
+ */
+
+printf("%s\n", json_get_str(&test, "string"));
+printf("%d\n", json_get_int(&test, "integer"));
+printf("%f\n", json_get_float(&test, "float"));
+
+/*
+JSON Is Cool
+142
+0.045600
 */
 ```
 
