@@ -22,7 +22,7 @@ int emJSON_clear(json_t *obj)
  * Insertion functions
  ******************************************************************************/
 
-int emJSON_insert(json_t *obj, char *key, void *value, json_value_e type)
+int emJSON_insert(json_t *obj, char *key, void *value, json_value_t type)
 {
     int ret;
     ret = json_insert(obj, key, value, type);

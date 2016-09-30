@@ -21,6 +21,13 @@ int main(int argc, char *argv[])
     emJSON_insert_str(&test, "TestJ", "Should not appear");
     emJSON_insert_str(&test, "TestH", "Test Good?");
     emJSON_delete(&test, "TestJ");
+    // Serialize
+    printf("==JSON Serialize Test==\n");
+    char *str = emJSON_string(&test);
+    printf("%d\n", json_strlen(&test));
+    printf("%d\n", strlen(str));
+    printf("%s\n", str);
+    free(str);
     emJSON_insert_str(&test, "TestI", "Really??");
     emJSON_insert_str(&test, "TestK", "Really? again???");
     printf("%s\n", emJSON_get_str(&test, "a"));
@@ -30,13 +37,6 @@ int main(int argc, char *argv[])
     printf("%s\n", emJSON_get_str(&test, "TestI"));
     printf("%s\n", emJSON_get_str(&test, "TestJ"));
     printf("%s\n", emJSON_get_str(&test, "TestK"));
-    // Serialize
-    printf("==JSON Serialize Test==\n");
-    char *str = emJSON_string(&test);
-    printf("%d\n", json_strlen(&test));
-    printf("%d\n", strlen(str));
-    printf("%s\n", str);
-    free(str);
     
     // clear test
     emJSON_clear(&test);

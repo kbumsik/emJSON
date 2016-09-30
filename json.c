@@ -6,7 +6,7 @@
 
 // Private functions
 static int _get_idx(json_t *obj, char *key);
-static int _insert(json_t *obj, char *key, void *value, size_t size, json_value_e type);
+static int _insert(json_t *obj, char *key, void *value, size_t size, json_value_t type);
 
 // in-line functions
 #define _buf_size(obj)  (obj->header->buf_size)
@@ -25,7 +25,7 @@ static inline int _table_byte_size(json_t *obj)
 static inline int _content_byte_size(json_t *obj)
 {
     return obj->header->buf_size - 
-        (sizeof(json_header_t) + obj->header->entry_count * sizeof(json_entry_t));
+        (sizeof(json_header_t) + obj->header->table_size * sizeof(json_entry_t));
 }
 
 
@@ -117,7 +117,7 @@ int json_clear(json_t *obj)
  * Insertion functions
  ******************************************************************************/
 
-int json_insert(json_t *obj, char *key, char *value, json_value_e type)
+int json_insert(json_t *obj, char *key, char *value, json_value_t type)
 {
     switch (type)
     {
@@ -401,7 +401,7 @@ json_t json_copy(void *dest_buf, json_t *obj)
         .buf = dest_buf,
         .header = dest_buf,
         .entry_table = dest_buf + sizeof(json_header_t),
-        .content = dest_buf + sizeof(json_header_t) + _table_byte_size(&new_obj)
+        .content = dest_buf + sizeof(json_header_t) + _table_byte_size(obj)
     };
     for (int i = 0; i < _table_size(obj); i++)
     {
@@ -467,7 +467,7 @@ end_error:
 }
 
 
-static int _insert(json_t *obj, char *key, void *value, size_t size, json_value_e type)
+static int _insert(json_t *obj, char *key, void *value, size_t size, json_value_t type)
 {
     if (_entry_count(obj) >= _table_size(obj))
     {

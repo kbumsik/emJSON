@@ -18,7 +18,7 @@ int emJSON_delete(json_t *obj, char *key);
 int emJSON_clear(json_t *obj);
 
 // Insertion functions
-int emJSON_insert(json_t *obj, char *key, void *value, json_value_e type);
+int emJSON_insert(json_t *obj, char *key, void *value, json_value_t type);
 int emJSON_insert_str(json_t *obj, char *key, char *value);
 int emJSON_insert_int(json_t *obj, char *key, int value);
 int emJSON_insert_float(json_t *obj, char *key, float value);

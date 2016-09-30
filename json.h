@@ -12,24 +12,24 @@
 #define JSON_BUFFER_FULL    -5
 #define JSON_ENTRY_BUFFER_FULL    -6
 
-typedef enum
-{
-    JSON_INT,
-    JSON_FLOAT,
-    JSON_STRING
+typedef uint8_t json_value_size_t;
+typedef uint8_t json_value_t;
+
+#define JSON_INT       1
+#define JSON_FLOAT     2
+#define JSON_STRING    3
     //object,
     //array,
     //boolean,
     //null_value
-}json_value_e;
 
 typedef struct
 {
-    json_value_e value_type;
     int32_t hash;
     void *value_ptr;
     char *key;
-    size_t value_size;
+    json_value_size_t value_size;
+    json_value_t value_type;
 }json_entry_t;
 
 typedef struct
@@ -57,7 +57,7 @@ int json_delete(json_t *obj, char *key);
 int json_clear(json_t *obj);
 
 // Insertion functions
-int json_insert(json_t *obj, char *key, char *value, json_value_e type);
+int json_insert(json_t *obj, char *key, char *value, json_value_t type);
 int json_insert_str(json_t *obj, char *key, char *value);
 int json_insert_int(json_t *obj, char *key, int32_t value);
 int json_insert_float(json_t *obj, char *key, float value);
