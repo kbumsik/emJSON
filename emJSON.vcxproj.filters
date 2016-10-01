@@ -60,8 +60,5 @@
     <ClInclude Include="json.h">
       <Filter>Header files</Filter>
     </ClInclude>
-    <ClInclude Include="json_parser.h">
-      <Filter>Header files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

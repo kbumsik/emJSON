@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "emJSON.h"
-#include "json_parser.h"
 
 int main(int argc, char *argv[])
 {
@@ -90,7 +89,7 @@ int main(int argc, char *argv[])
     
     // parsing test
     emJSON_clear(&test);
-    char str_input[] = "{  \"float\"  :  4560.0E-3  ,  \"string\"  :  \"JSON Is Cool \"  ,  \"integer\"  :  142  }";
+    char str_input[] = "{\"sensor1\":0.045600E3,\"message\":\"JSON Is Cool\",\"sensor2\":142}";
     json_parse(&test, str_input);
     // Serialize
     printf("==JSON Serialize Test==\n");

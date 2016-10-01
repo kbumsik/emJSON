@@ -10,71 +10,58 @@ There are two libraries in this project:
 Features
 --------
 
+* JSON Encoding.
+* JSON Decoding.
+* Easy to use.
 * Fast and efficient hash map algorithm.
 * Minimized use of memory and memory fragmentation.
-* No use of malloc() (specific to json.h)
-* No library dependencies.
+* No use of malloc() (json.h only)
+* No extra library dependencies. (Only C standard libraries used.)
 * Only need to include a single file (emJSON.h or json.h)
 
-Examples
---------
-
-### emJSON.h:
-``` C
-json_t test = emJSON_init();
-emJSON_insert_str(&test, "string", "JSON Is Cool");
-emJSON_insert_int(&test, "integer", 142);
-emJSON_insert_float(&test, "float", 0.0456);
-
-char *str = emJSON_string(&test);
-printf("%s\n", str);
-free(str);
-
-/*
-{"integer":142,"float":0.045600,"string":"JSON Is Cool"}
- */
-
-printf("%s\n", emJSON_get_str(&test, "string"));
-printf("%d\n", emJSON_get_int(&test, "integer"));
-printf("%f\n", emJSON_get_float(&test, "float"));
-
-/*
-JSON Is Cool
-142
-0.045600
-*/
-emJSON_free(&test);
-
-```
+Simple Examples
+---------------
 
 ### json.h:
 ``` C
-char buf[150];
+char str_input[] = "{\"sensor1\":0.045600,\"message\":\"JSON Is Cool\",\"sensor2\":142}";
 
-json_t test = json_init(buf, 256, 4);  // 8 is table size
-json_insert_str(&test, "string", "JSON Is Cool");
-json_insert_int(&test, "integer", 142);
-json_insert_float(&test, "float", 0.0456);
+char buf[256];
+json_t test = json_init(buf, 256, 4);  // 4 is table size, this MUST be power of 2.
+json_parse(&test, str_input);
 
-char str[60];
+float sensor1 = json_get_float(&test, "sensor1"); // 0.0456
+int sensor2 =   json_get_int(&test, "sensor2");   // 142
+char *message = json_get_str(&test, "message");   // "JSON Is Cool
+
+json_insert_int(&test, "intInput", 999); // insert
+
+char str[80];
 json_strcpy(str, &test);
 printf("%s\n", str);
-
-/*
-{"float":0.045600,"string":"JSON Is Cool","integer":142}
- */
-
-printf("%s\n", json_get_str(&test, "string"));
-printf("%d\n", json_get_int(&test, "integer"));
-printf("%f\n", json_get_float(&test, "float"));
-
-/*
-JSON Is Cool
-142
-0.045600
-*/
+// {"sensor1":0.045600,"intInput":999,"message":"JSON Is Cool","sensor2":142}
 ```
 
+### emJSON.h:
+``` C
+char str_input[] = "{\"sensor1\":0.045600,\"message\":\"JSON Is Cool\",\"sensor2\":142}";
+
+json_t test = emJSON_init();  // 8 is table size
+emJSON_parse(&test, str_input);
+
+float sensor1 = emJSON_get_float(&test, "sensor1"); // 0.0456
+int sensor2 =   emJSON_get_int(&test, "sensor2");   // 142
+char *message = emJSON_get_str(&test, "message");   // "JSON Is Cool
+
+emJSON_insert_int(&test, "intInput", 999); // insert
+
+char *str = emJSON_string(&test);
+printf("%s\n", str);
+// {"sensor1":0.045600,"intInput":999,"message":"JSON Is Cool","sensor2":142}
+
+free(str);
+emJSON_free(&test);
+```
 Implementation
 --------------
 
@@ -86,6 +73,7 @@ TODOs
 
 * [x] JSON encoding
 * [x] JSON decoding
+* [ ] Merge functions
 * [ ] Thread-safe
 * [ ] Data alignment
 * [x] Support String type

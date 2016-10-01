@@ -8,6 +8,47 @@ json_t emJSON_init()
     return result;
 }
 
+int emJSON_parse(json_t *obj, char *input)
+{
+    int ret;
+    ret = json_parse(obj, input);
+    
+    while (ret != JSON_OK)
+    {
+        int table_size = obj->header->table_size;
+        
+        void *new_buf;
+        void *old_buf;
+        int buf_size = obj->header->buf_size;
+        
+        switch (ret)
+        {
+        case JSON_KEY_EXISTS:
+            return JSON_KEY_EXISTS;
+        case JSON_TABLE_FULL:
+            json_clear(obj);
+            ret = json_double_table(obj);
+            if (JSON_OK == ret)
+            {
+                ret = json_parse(obj, input);
+            }
+            break;
+        case JSON_BUFFER_FULL:
+            old_buf = obj->buf;
+            buf_size += 32;
+            new_buf = malloc(buf_size);
+            json_replace_buffer(obj, new_buf, buf_size);
+            free(old_buf);
+            json_clear(obj);
+            ret = json_parse(obj, input);
+            break;
+        default:
+            return JSON_ERROR;
+        }
+    }
+    return JSON_OK;
+}
+
 int emJSON_delete(json_t *obj, char *key)
 {
     return json_delete(obj, key);
@@ -26,7 +67,6 @@ int emJSON_insert(json_t *obj, char *key, void *value, json_value_t type)
 {
     int ret;
     ret = json_insert(obj, key, value, type);
-    // TODO: Increase size then entry_num/size = 3/4?
     while (ret != JSON_OK)
     {
         int table_size = obj->header->table_size;

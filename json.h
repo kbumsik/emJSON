@@ -53,6 +53,7 @@ int32_t json_hash(char *str);
 
 // lower-level basic functions
 json_t json_init(void *buffer, size_t buf_size, size_t table_size);
+int json_parse(json_t *obj, char *input);
 int json_delete(json_t *obj, char *key);
 int json_clear(json_t *obj);
 

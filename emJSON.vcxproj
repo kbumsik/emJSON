@@ -80,7 +80,6 @@
   <ItemGroup>
     <ClInclude Include="emJSON.h" />
     <ClInclude Include="json.h" />
-    <ClInclude Include="json_parser.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

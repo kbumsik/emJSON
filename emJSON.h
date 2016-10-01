@@ -9,11 +9,12 @@
 #include "json.h"
 
 // Settings
-#define EMJSON_INIT_BUF_SIZE    256
-#define EMJSON_INIT_TABLE_SIZE  8
+#define EMJSON_INIT_BUF_SIZE    128
+#define EMJSON_INIT_TABLE_SIZE  2
 
 // high-level functions
 json_t emJSON_init();
+int emJSON_parse(json_t *obj, char *input);
 int emJSON_delete(json_t *obj, char *key);
 int emJSON_clear(json_t *obj);
 
