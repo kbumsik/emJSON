@@ -26,23 +26,6 @@ typedef uint8_t json_value_t;
 
 typedef struct
 {
-    int32_t hash;
-    void *value_ptr;
-    char *key;
-    json_value_size_t value_size;
-    json_value_t value_type;
-}json_entry_t;
-
-typedef struct
-{
-    int buf_size;
-    size_t  buf_idx;
-    size_t  table_size;
-    int entry_count;
-}json_header_t;
-
-typedef struct
-{
     void *buf;
 }json_t;
 
@@ -81,5 +64,10 @@ int json_strlen(json_t *obj);
 int json_replace_buffer(json_t *obj, void *new_buf, size_t size);
 int json_double_table(json_t *obj);
 json_t json_copy(void *dest_buf, json_t *obj);
+
+// Other utility functions
+int json_table_size(json_t *obj);
+int json_count(json_t *obj);
+int json_buffer_size(json_t *obj);
 
 #endif  // __JSON_H__
