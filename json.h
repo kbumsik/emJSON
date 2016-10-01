@@ -44,8 +44,6 @@ typedef struct
 typedef struct
 {
     void *buf;
-    json_header_t *header;
-    json_entry_t *entry_table;
 }json_t;
 
 // core utility functions

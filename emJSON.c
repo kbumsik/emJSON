@@ -1,6 +1,8 @@
 #include "emJSON.h"
 #include <string.h>
 
+#define _header_ptr(obj)  ((json_header_t *)((obj)->buf))
+
 json_t emJSON_init()
 {
     void *buffer = malloc(EMJSON_INIT_BUF_SIZE);
@@ -15,11 +17,11 @@ int emJSON_parse(json_t *obj, char *input)
     
     while (ret != JSON_OK)
     {
-        int table_size = obj->header->table_size;
+        int table_size = _header_ptr(obj)->table_size;
         
         void *new_buf;
         void *old_buf;
-        int buf_size = obj->header->buf_size;
+        int buf_size = _header_ptr(obj)->buf_size;
         
         switch (ret)
         {
@@ -69,11 +71,11 @@ int emJSON_insert(json_t *obj, char *key, void *value, json_value_t type)
     ret = json_insert(obj, key, value, type);
     while (ret != JSON_OK)
     {
-        int table_size = obj->header->table_size;
+        int table_size = _header_ptr(obj)->table_size;
         
         void *new_buf;
         void *old_buf;
-        int buf_size = obj->header->buf_size;
+        int buf_size = _header_ptr(obj)->buf_size;
         
         switch (ret)
         {
@@ -191,11 +193,10 @@ int emJSON_strcpy(char *dest, json_t *obj)
 
 int emJSON_free(json_t *obj)
 {
-    // free table
-    free(obj->entry_table);
     // free buffer
     free(obj->buf);
-    // Clear
-    memset(obj, 0, sizeof(json_t));
     return 0;
 }
+
+// pointer macros
+#undef  _header_ptr
