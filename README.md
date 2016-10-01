@@ -84,7 +84,7 @@ The algorithm is highly inspired by [Python's Dictionary implementation](http://
 TODOs
 --------
 
-* [ ] JSON encoding
+* [x] JSON encoding
 * [x] JSON decoding
 * [ ] Thread-safe
 * [ ] Data alignment

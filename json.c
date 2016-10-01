@@ -44,7 +44,7 @@ int32_t json_hash(char *str)
     for (; *ptr != '\0'; ptr++)
     {
         char cha = *ptr;
-        result = (1000003 * result) ^ cha;
+        result = (1000003 * result) ^ cha; //XOR
         len += 1;
     }
     result ^= len;

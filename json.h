@@ -18,6 +18,7 @@ typedef uint8_t json_value_t;
 #define JSON_INT       1
 #define JSON_FLOAT     2
 #define JSON_STRING    3
+#define JSON_UNKNOWN   4
     //object,
     //array,
     //boolean,

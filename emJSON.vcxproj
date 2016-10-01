@@ -65,6 +65,7 @@
   <ItemGroup>
     <ClCompile Include="emJSON.c" />
     <ClCompile Include="json.c" />
+    <ClCompile Include="json_parser.c" />
     <ClCompile Include="main.c" />
   </ItemGroup>
   <ItemGroup>
@@ -79,6 +80,7 @@
   <ItemGroup>
     <ClInclude Include="emJSON.h" />
     <ClInclude Include="json.h" />
+    <ClInclude Include="json_parser.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
