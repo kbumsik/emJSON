@@ -73,6 +73,7 @@ TODOs
 
 * [x] JSON encoding
 * [x] JSON decoding
+* [ ] Support for 8 bit CPU (such as AVR)
 * [ ] No sprintf(), sscanf().
 * [ ] Merge functions
 * [ ] Thread-safe

@@ -361,7 +361,10 @@ int json_strlen(json_t *obj)
 int json_replace_buffer(json_t *obj, void *new_buf, size_t size)
 {
     void *old_buf = obj->buf;
-    int offset = new_buf - old_buf;
+    // Because in some system the offset is beyond signed int
+    // TODO: check if long int is always 32 bit in 32 bit system and 64 bit in 64 bit system
+    int is_plus = ((new_buf - old_buf) > 0)? 1: 0;
+    unsigned long int offset = (is_plus)?(new_buf - old_buf):(old_buf - new_buf);
     for (size_t i = 0; i < _table_size(obj); i++)
     {
         _entry_t *entry = (_table_ptr(obj) + i);
@@ -369,8 +372,16 @@ int json_replace_buffer(json_t *obj, void *new_buf, size_t size)
         {
             continue;
         }
-        entry->key += offset;
-        entry->value_ptr += offset;
+        if (is_plus)
+        {
+            entry->key += offset;
+            entry->value_ptr += offset;
+        }
+        else
+        {
+            entry->key -= offset;
+            entry->value_ptr -= offset;
+        }
     }
     // clear buffer first then copy
     memset(new_buf, 0, size);
@@ -406,7 +417,7 @@ int json_double_table(json_t *obj)
         json_insert(&tmp_obj, entry->key, entry->value_ptr, entry->value_type);
     }
     // Then replace buffer
-    json_replace_buffer(&tmp_obj, obj->buf, _buf_size(obj));
+    json_replace_buffer(&tmp_obj, obj->buf, _buf_size(obj)); // FIXME: Problem here.
     
     // Then replace table
     obj->buf = tmp_obj.buf;
@@ -415,7 +426,10 @@ int json_double_table(json_t *obj)
 
 json_t json_copy(void *dest_buf, json_t *obj)
 {
-    int offset = dest_buf - obj->buf;
+    // Because in some system the offset is beyond signed int
+    // TODO: check if long int is always 32 bit in 32 bit system and 64 bit in 64 bit system
+    int is_plus = ((dest_buf - obj->buf) > 0)? 1: 0;
+    unsigned long int offset = (is_plus)?(dest_buf - obj->buf):(obj->buf - dest_buf);
     memcpy(dest_buf, obj->buf, _buf_size(obj));
     json_t new_obj = { 
         .buf = dest_buf
@@ -426,8 +440,16 @@ json_t json_copy(void *dest_buf, json_t *obj)
         {
             continue;
         }
-        _table_ptr(&new_obj)[i].key += offset;
-        _table_ptr(&new_obj)[i].value_ptr += offset;
+        if (is_plus)
+        {
+            _table_ptr(&new_obj)[i].key += offset;
+            _table_ptr(&new_obj)[i].value_ptr += offset;
+        }
+        else
+        {
+            _table_ptr(&new_obj)[i].key -= offset;
+            _table_ptr(&new_obj)[i].value_ptr -= offset;
+        }
     }
     return new_obj;
 }

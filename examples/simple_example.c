@@ -5,7 +5,7 @@
 int main()
 {
     char sz[] = "Hello, World!\n";  /* Hover mouse over "sz" while debugging to see its contents */
-    printf("%s", sz);   
+    printf("%s", sz);
     fflush(stdout);
     printf("%d\n", json_hash("a") & 7);
     printf("%d\n", json_hash("i") & 7);
@@ -36,18 +36,21 @@ int main()
     printf("%s\n", emJSON_get_str(&test, "q"));
     printf("%s\n", emJSON_get_str(&test, "TestH"));
     printf("%s\n", emJSON_get_str(&test, "TestI"));
-    printf("%s\n", emJSON_get_str(&test, "TestJ"));
+    fflush(stdout);
+    printf("%s\n", (NULL == emJSON_get_str(&test, "TestJ"))?"NULL":emJSON_get_str(&test, "TestJ"));
+    fflush(stdout);
     printf("%s\n", emJSON_get_str(&test, "TestK"));
+    fflush(stdout);
     
     // clear test
     emJSON_clear(&test);
-    printf("%s\n", emJSON_get_str(&test, "a"));
-    printf("%s\n", emJSON_get_str(&test, "i"));
-    printf("%s\n", emJSON_get_str(&test, "q"));
-    printf("%s\n", emJSON_get_str(&test, "TestH"));
-    printf("%s\n", emJSON_get_str(&test, "TestI"));
-    printf("%s\n", emJSON_get_str(&test, "TestJ"));
-    printf("%s\n", emJSON_get_str(&test, "TestK"));
+    printf("%s\n", (NULL == emJSON_get_str(&test, "a"))?"NULL":emJSON_get_str(&test, "a"));
+    printf("%s\n", (NULL == emJSON_get_str(&test, "i"))?"NULL":emJSON_get_str(&test, "i"));
+    printf("%s\n", (NULL == emJSON_get_str(&test, "q"))?"NULL":emJSON_get_str(&test, "q"));
+    printf("%s\n", (NULL == emJSON_get_str(&test, "TestH"))?"NULL":emJSON_get_str(&test, "TestH"));
+    printf("%s\n", (NULL == emJSON_get_str(&test, "TestI"))?"NULL":emJSON_get_str(&test, "TestI"));
+    printf("%s\n", (NULL == emJSON_get_str(&test, "TestJ"))?"NULL":emJSON_get_str(&test, "TestJ"));
+    printf("%s\n", (NULL == emJSON_get_str(&test, "TestK"))?"NULL":emJSON_get_str(&test, "TestK"));
     
     // More types test.
     emJSON_insert_float(&test, "float1", 4.9);
@@ -79,7 +82,8 @@ int main()
     // Non-exist keys
     printf("%d\n", emJSON_get_int(&test, "int?3"));
     printf("%f\n", emJSON_get_float(&test, "str??3"));
-    printf("%s\n", emJSON_get_str(&test, "3int?"));
+    printf("%s\n", (NULL == emJSON_get_str(&test, "3int?"))?"NULL":emJSON_get_str(&test, "3int?"));
+ 
     // Serialize
     printf("==JSON Serialize Test==\n");
     str = emJSON_string(&test);
@@ -101,5 +105,6 @@ int main()
     free(str);
     // Finished
     emJSON_free(&test);
+    printf("%s\n", "Done, You're Good!\n");
     return 0;
 }

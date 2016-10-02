@@ -62,42 +62,21 @@ printf("%s\n", str);
 free(str);
 emJSON_free(&test);
 ```
-Implementation
---------------
 
-The algorithm is highly inspired by [Python's Dictionary implementation](http://svn.python.org/projects/python/trunk/Objects/dictobject.c) and [Python's string hash algorithm](https://svn.python.org/projects/python/trunk/Objects/stringobject.c).
+How To Use
+----------
 
+All you need is the header and source files in `emJSON` folder.
+You may also want to see 
+[documentations in doc folder](https://github.com/kbumsik/emJSON/tree/master/doc)
+before you get started.
+For testing and using existing sample codes, please look at 
+`examples` folder. 
 
-TODOs
---------
+Supported Devices
+-----------------
 
-* [x] JSON encoding
-* [x] JSON decoding
-* [ ] No sprintf(), sscanf().
-* [ ] Merge functions
-* [ ] Thread-safe
-* [ ] Data alignment
-* [x] Support String type
-* [x] Support Integer type
-* [x] Support Number type (floating point)
-* [ ] Support object type
-* [ ] Support Boolean literals (true, false)
-* [ ] Support Null literal (null)
-* [ ] Support array type
+* x86 and x86-64 based general purpose computers (such as Windows/Linux/Unix computers.)
+* 32-bit ARM Cortex-M devices (e.g. STM32F4 Series)
+* Arduino and AVR Microcontrollers (Not yet, planned.)
 
-Limitations
------------
-
-### Common
-* The format of JSON should be correct. Otherwise, the code will break.
-* No comment in JSON allowed.
-
-
-### json.h specific
-
-Because it does not use dynamic memory allocations there are several limitation:
-
-* buffer should be big enough that it does not have overflow or `json_replace_buffer()` to move to a bigger buffer.
-* json entry size is not auto-resizable. Therefore use big enough json entry table, or `json_replace_table()` to move to a bigger table.
-* The json entry size SHOULD be a power of 2. (e.g. 2, 4, 8, 16...)
-* Buffer size of string value is a multiple of 8. If you change string value over than string buffer size, run `json_remove()` then `json_insert()`.
