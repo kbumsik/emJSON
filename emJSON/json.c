@@ -542,7 +542,7 @@ static int _insert(json_t *obj, char *key, void *value, size_t size, json_value_
     }
     
     // construct entry object first, with hash.
-    _entry_t new_entry = {};
+    _entry_t new_entry = {0};
     new_entry.hash = json_hash(key);
     
     // put into the table

@@ -14,7 +14,7 @@ Features
 * JSON Decoding.
 * Easy to use.
 * Fast and efficient hash map algorithm.
-* Minimized use of memory and memory fragmentation.
+* Minimized use of memory and memory fragmentation by using only a single buffer.
 * No use of malloc() (json.h only)
 * No extra library dependencies. (Only C standard libraries used.)
 * Only need to include a single file (emJSON.h or json.h)

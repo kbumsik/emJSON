@@ -1,27 +1,30 @@
-BIN= simple_example
+BIN=simple_example full_example
+
+BIN_OBJS=$(BIN:=.o)
 
 # Define cimpilers
 CC=gcc
 CXX=g++
-CCFLAGS= -g -std=c99 -Wall -Wextra -Werror
+CCFLAGS=-g -std=c99 -Wall -Wextra -Werror
 
 # Define path
-SRC_DIR= ../emJSON/
-INC_DIR= ../emJSON/
+SRC_DIR:=../emJSON
+INC_DIR:=../emJSON
 
-SRC= $(wildcard $(SRC_DIR)*.c)
-OBJ= $(wildcard $(SRC_DIR)*.o)
-INC= $(wildcard $(INC_DIR)*.h)
+SRC:=$(wildcard $(SRC_DIR)/*.c)
+OBJ:=$(SRC:.c=.o)
+INC:=$(wildcard $(INC_DIR)/*.h)
 
 all: $(BIN)
 
-debug: $(BIN)
-
+$(SRC_DIR)/%.o: %.c $(INC)
+	$(CC) $< $(CCFLAGS) -I $(INC_DIR) -c -o $@
+	
 %.o: %.c $(INC)
 	$(CC) $< $(CCFLAGS) -I $(INC_DIR) -c -o $@
 
-$(BIN): simple_example.o ../emJSON/emJSON.o ../emJSON/json_parser.o ../emJSON/json.o
-	$(CC) $(CCFLAGS) simple_example.o ../emJSON/json.o ../emJSON/emJSON.o ../emJSON/json_parser.o -I $(INC_DIR) -o simple_example
+$(BIN): $(BIN_OBJS) $(OBJ)
+	$(CC) $(CCFLAGS) $@.o $(OBJ) -I $(INC_DIR) -o $@
 
 test:
 	./simple_example
@@ -29,4 +32,4 @@ test:
 
 .PHONY: clean
 clean:
-	rm -f *.o simple_example ../emJSON/*.o
+	rm -f *.o $(BIN) $(BIN_OBJS) $(OBJ)
