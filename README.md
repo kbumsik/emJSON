@@ -77,7 +77,7 @@ How To Use
 
 All you need is the header and source files in `emJSON` folder.
 You may also want to see 
-[documentations in doc folder](emJSON/blob/tree/master/docs)
+[documentations in doc folder](docs)
 before you get started.
 For testing and using existing sample codes, please look at 
 `examples` folder. 
