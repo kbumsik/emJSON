@@ -15,10 +15,10 @@ typedef struct
 
 typedef struct
 {
-    int buf_size;
-    size_t  buf_idx;
-    size_t  table_size;
-    int entry_count;
+    size_t buf_size;
+    size_t buf_idx;
+    size_t table_size;
+    size_t entry_count;
 }_header_t;
 
 // Private functions
@@ -40,12 +40,12 @@ static int _insert(json_t *obj, char *key, void *value, size_t size, json_value_
 #define _entry_count(obj)   (_header_ptr(obj)->entry_count)
 
 
-static inline int _table_byte_size(json_t *obj)
+static inline size_t _table_byte_size(json_t *obj)
 {
     return _header_ptr(obj)->table_size * sizeof(_entry_t);
 }
 
-static inline int _content_byte_size(json_t *obj)
+static inline size_t _content_byte_size(json_t *obj)
 {
     return _header_ptr(obj)->buf_size - 
         (sizeof(_header_t) + _header_ptr(obj)->table_size * sizeof(_entry_t));
@@ -114,7 +114,7 @@ int json_delete(json_t *obj, char *key)
     // Clear original table and replace it again
     json_clear(obj);
     
-    for (int i = 0; i < _header_ptr(&tmp_obj)->table_size; i++)
+    for (size_t i = 0; i < _header_ptr(&tmp_obj)->table_size; i++)
     {
         _entry_t *entry = (_table_ptr(&tmp_obj) + i);
         if (NULL == entry->key)
@@ -271,7 +271,7 @@ int json_strcpy(char *dest, json_t *obj)
     memset(dest + idx, '{', 1);
     idx += 1;
     // start
-    for (int i = 0; i < _table_size(obj); i++)
+    for (size_t i = 0; i < _table_size(obj); i++)
     {
         _entry_t entry = _table_ptr(obj)[i];
         if (NULL == entry.key)
@@ -297,7 +297,7 @@ int json_strcpy(char *dest, json_t *obj)
         case JSON_STRING:
             memset(dest + idx, '\"', 1);
             idx += 1;
-            sprintf(str_buf, "%s", entry.value_ptr);
+            sprintf(str_buf, "%s", (char *)entry.value_ptr);
             break;
         default:
             return JSON_ERROR;
@@ -319,7 +319,7 @@ int json_strlen(json_t *obj)
     int idx = 0;
     idx += 1;	// '{'
     // start
-    for (int i = 0; i < _table_size(obj); i++)
+    for (size_t i = 0; i < _table_size(obj); i++)
     {
         _entry_t entry = _table_ptr(obj)[i];
         if (NULL == entry.key)
@@ -341,7 +341,7 @@ int json_strlen(json_t *obj)
             break;
         case JSON_STRING:
             idx += 1;	// '\"'
-            sprintf(str_buf, "%s", entry.value_ptr);
+            sprintf(str_buf, "%s", (char *)entry.value_ptr);
             break;
         default:
             return JSON_ERROR;
@@ -362,7 +362,7 @@ int json_replace_buffer(json_t *obj, void *new_buf, size_t size)
 {
     void *old_buf = obj->buf;
     int offset = new_buf - old_buf;
-    for (int i = 0; i < _table_size(obj); i++)
+    for (size_t i = 0; i < _table_size(obj); i++)
     {
         _entry_t *entry = (_table_ptr(obj) + i);
         if (NULL == entry->key)
@@ -396,7 +396,7 @@ int json_double_table(json_t *obj)
     uint8_t tmp_buf[_buf_size(obj)];
     json_t tmp_obj = json_init(tmp_buf, _buf_size(obj), _table_size(obj) * 2);
     
-    for (int i = 0; i < _table_size(obj); i++)
+    for (size_t i = 0; i < _table_size(obj); i++)
     {
         _entry_t *entry = (_table_ptr(obj) + i);
         if (NULL == entry->key)
@@ -420,7 +420,7 @@ json_t json_copy(void *dest_buf, json_t *obj)
     json_t new_obj = { 
         .buf = dest_buf
     };
-    for (int i = 0; i < _table_size(obj); i++)
+    for (size_t i = 0; i < _table_size(obj); i++)
     {
         if (NULL == _table_ptr(obj)[i].key)
         {
@@ -464,7 +464,7 @@ static int _get_idx(json_t *obj, char *key)
     // variables for open addressing
     int perturb = hash;
     uint8_t checked[_table_size(obj)];
-    int count = 0;
+    size_t count = 0;
     
     // Search start
     entry = _table_ptr(obj)[idx];
@@ -513,7 +513,7 @@ static int _insert(json_t *obj, char *key, void *value, size_t size, json_value_
     // buffer size check
     int key_size = strlen(key) + 1;
     int value_size = size + 1;
-    int buf_required = key_size + value_size;
+    size_t buf_required = key_size + value_size;
     if (_buf_idx(obj) + buf_required > _buf_size(obj))
     {
         return JSON_BUFFER_FULL;

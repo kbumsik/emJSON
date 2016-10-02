@@ -2,15 +2,16 @@
 #include <string.h>
 #include "emJSON.h"
 
-int main(int argc, char *argv[])
+int main()
 {
     char sz[] = "Hello, World!\n";  /* Hover mouse over "sz" while debugging to see its contents */
     printf("%s", sz);   
-    fflush(stdout); /* <============== Put a breakpoint here */
+    fflush(stdout);
     printf("%d\n", json_hash("a") & 7);
     printf("%d\n", json_hash("i") & 7);
     printf("%d\n", json_hash("q") & 7);
     printf("%d\n", json_hash("TestH") & 7);
+    fflush(stdout);
     
     json_t test = emJSON_init();
     
@@ -25,7 +26,7 @@ int main(int argc, char *argv[])
     printf("==JSON Serialize Test==\n");
     char *str = emJSON_string(&test);
     printf("%d\n", json_strlen(&test));
-    printf("%d\n", strlen(str));
+    printf("%d\n", (int)strlen(str));
     printf("%s\n", str);
     free(str);
     emJSON_insert_str(&test, "TestI", "Really??");
@@ -83,7 +84,7 @@ int main(int argc, char *argv[])
     printf("==JSON Serialize Test==\n");
     str = emJSON_string(&test);
     printf("%d\n", json_strlen(&test));
-    printf("%d\n", strlen(str));
+    printf("%d\n", (int)strlen(str));
     printf("%s\n", str);
     free(str);
     
@@ -95,7 +96,7 @@ int main(int argc, char *argv[])
     printf("==JSON Serialize Test==\n");
     str = emJSON_string(&test);
     printf("%d\n", json_strlen(&test));
-    printf("%d\n", strlen(str));
+    printf("%d\n", (int)strlen(str));
     printf("%s\n", str);
     free(str);
     // Finished

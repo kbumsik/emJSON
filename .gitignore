@@ -1,5 +1,10 @@
-## Project-specific
-CodeDB/
+## Eclipse CDT
+.metadata/
+RemoteSystemsTempFiles/
+.settings/
+.cproject
+.project
+*.o
 
 ## Others
 

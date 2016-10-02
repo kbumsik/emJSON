@@ -17,8 +17,6 @@ int emJSON_parse(json_t *obj, char *input)
     
     while (ret != JSON_OK)
     {
-        int table_size = json_table_size(obj);
-        
         void *new_buf;
         void *old_buf;
         int buf_size = json_buffer_size(obj);
@@ -71,8 +69,6 @@ int emJSON_insert(json_t *obj, char *key, void *value, json_value_t type)
     ret = json_insert(obj, key, value, type);
     while (ret != JSON_OK)
     {
-        int table_size = json_table_size(obj);
-        
         void *new_buf;
         void *old_buf;
         int buf_size = json_buffer_size(obj);
