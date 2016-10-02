@@ -1,16 +1,15 @@
-/**
- * This library is inspired by Python Dictionary implementation.
- * Look string_hash() function in https://svn.python.org/projects/python/trunk/Objects/stringobject.c
- * Also see http://svn.python.org/projects/python/trunk/Objects/dictobject.c for open addressing.
- */
 #ifndef __EMJSON_H__
 #define __EMJSON_H__
 
 #include "json.h"
 
 // Settings
-#define EMJSON_INIT_BUF_SIZE    128
-#define EMJSON_INIT_TABLE_SIZE  2
+#ifndef EMJSON_INIT_BUF_SIZE
+	#define EMJSON_INIT_BUF_SIZE    256
+#endif
+#ifndef EMJSON_INIT_TABLE_SIZE
+	#define EMJSON_INIT_TABLE_SIZE  4
+#endif
 
 // high-level functions
 json_t emJSON_init();
