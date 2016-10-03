@@ -69,7 +69,9 @@ Supported Devices
 -----------------
 
 * x86 and x86-64 based general purpose computers (such as Windows/Linux/Unix computers.)
-* 32-bit ARM Cortex-M devices (e.g. STM32F4 Series)
+* 32-bit ARM Cortex-M devices
+  * NUCLEO-F4xx series (tested in [mbed](https://developer.mbed.org/compiler/) platform)
+  * Other Cortex-M MCUs should work too.
 * Arduino and AVR Microcontrollers (Not yet, planned.)
 
 How To Use

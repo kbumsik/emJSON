@@ -185,31 +185,32 @@ int json_insert_str(json_t *obj, char *key, char *value)
  * Getter functions
  ******************************************************************************/
 
-void *json_get(json_t *obj, char *key)
+void *json_get(json_t *obj, char *key, json_value_t type)
 {
     int idx = _get_idx(obj, key);
     if (idx >= 0)
     {
-        return _table_ptr(obj)[idx].value_ptr;
+    	json_value_t target_type = _table_ptr(obj)[idx].value_type;
+        return (target_type == type)? _table_ptr(obj)[idx].value_ptr : NULL;
     }
     return NULL;
 }
 
 int json_get_int(json_t *obj, char *key)
 {
-    void *result = json_get(obj, key);
+    void *result = json_get(obj, key, JSON_INT);
     return (NULL != result) ? *(int *)result : 0;
 }
 
 float json_get_float(json_t *obj, char *key)
 {
-    void *result = json_get(obj, key);
-    return (NULL != result) ? *(float *)json_get(obj, key) : 0.0;
+    void *result = json_get(obj, key, JSON_FLOAT);
+    return (NULL != result) ? *(float *)result : 0.0;
 }
 
 char *json_get_str(json_t *obj, char *key)
 {
-    return (char *)json_get(obj, key);
+    return (char *)json_get(obj, key, JSON_STRING);
 }
 
 /*******************************************************************************

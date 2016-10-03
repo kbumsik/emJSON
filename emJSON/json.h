@@ -4,13 +4,14 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define JSON_OK             0
-#define JSON_ERROR          -1   // Unknown error
-#define JSON_NO_MATCHED_KEY	-2
-#define JSON_KEY_EXISTS	    -3
-#define JSON_TABLE_FULL	    -4
-#define JSON_BUFFER_FULL    -5
-#define JSON_ENTRY_BUFFER_FULL    -6
+#define JSON_OK             		0
+#define JSON_ERROR          		-1   // Unknown error
+#define JSON_NO_MATCHED_KEY			-2
+#define JSON_KEY_EXISTS	    		-3
+#define JSON_TABLE_FULL	    		-4
+#define JSON_BUFFER_FULL    		-5
+#define JSON_ENTRY_BUFFER_FULL		-6
+#define JSON_TYPE_MISMATCH			-7
 
 typedef uint8_t json_value_size_t;
 typedef uint8_t json_value_t;
@@ -49,7 +50,7 @@ int json_insert_int(json_t *obj, char *key, int32_t value);
 int json_insert_float(json_t *obj, char *key, float value);
 
 // Getter functions
-void *json_get(json_t *obj, char *key);
+void *json_get(json_t *obj, char *key, json_value_t type);
 char *json_get_str(json_t *obj, char *key);
 int json_get_int(json_t *obj, char *key);
 float json_get_float(json_t *obj, char *key);

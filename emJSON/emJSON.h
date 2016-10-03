@@ -28,7 +28,7 @@ int emJSON_insert_int(json_t *obj, char *key, int value);
 int emJSON_insert_float(json_t *obj, char *key, float value);
 
 // Getter functions
-void *emJSON_get(json_t *obj, char *key);
+void *emJSON_get(json_t *obj, char *key, json_value_t type);
 char *emJSON_get_str(json_t *obj, char *key);
 int emJSON_get_int(json_t *obj, char *key);
 float emJSON_get_float(json_t *obj, char *key);
