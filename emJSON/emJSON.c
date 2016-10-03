@@ -1,7 +1,7 @@
 #include "emJSON.h"
 #include <string.h>
 
-#define _header_ptr(obj)  ((json_header_t *)((obj)->buf))
+#define header_ptr_(obj)  ((json_header_t *)((obj)->buf))
 
 json_t emJSON_init()
 {
@@ -194,4 +194,4 @@ int emJSON_free(json_t *obj)
 }
 
 // pointer macros
-#undef  _header_ptr
+#undef  header_ptr_

@@ -30,7 +30,7 @@ int main()
     // Serialize
     printf("==JSON Serialize Test==\n");
     char *str = emJSON_string(&test);
-    printf("%d\n", json_strlen(&test));
+    printf("%d\n", (int)json_strlen(&test));
     printf("%d\n", (int)strlen(str));
     printf("%s\n", str);
     free(str);
@@ -92,7 +92,7 @@ int main()
     // Serialize
     printf("==JSON Serialize Test==\n");
     str = emJSON_string(&test);
-    printf("%d\n", json_strlen(&test));
+    printf("%d\n", (int)json_strlen(&test));
     printf("%d\n", (int)strlen(str));
     printf("%s\n", str);
     free(str);
@@ -104,7 +104,7 @@ int main()
     // Serialize
     printf("==JSON Serialize Test==\n");
     str = emJSON_string(&test);
-    printf("%d\n", json_strlen(&test));
+    printf("%d\n", (int)json_strlen(&test));
     printf("%d\n", (int)strlen(str));
     printf("%s\n", str);
     free(str);
