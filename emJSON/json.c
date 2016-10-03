@@ -59,7 +59,7 @@ static inline size_t _content_byte_size(json_t *obj)
 int32_t json_hash(char *str)
 {
     char *ptr = str;
-    int len = 0;
+    size_t len = 0;
     int32_t result = *ptr << 7;
     for (; *ptr != '\0'; ptr++)
     {
@@ -162,12 +162,12 @@ int json_insert(json_t *obj, char *key, char *value, json_value_t type)
 
 int json_insert_int(json_t *obj, char *key, int32_t value)
 {    
-    return _insert(obj, key, &value, 4, JSON_INT);
+    return _insert(obj, key, &value, sizeof(int), JSON_INT);
 }
 
 int json_insert_float(json_t *obj, char *key, float value)
 {    
-    return _insert(obj, key, &value, 4, JSON_FLOAT);
+    return _insert(obj, key, &value, sizeof(float), JSON_FLOAT);
 }
 
 int json_insert_str(json_t *obj, char *key, char *value)
@@ -314,7 +314,7 @@ int json_strcpy(char *dest, json_t *obj)
     return JSON_OK;
 }
 
-int json_strlen(json_t *obj)
+size_t json_strlen(json_t *obj)
 {
     char str_buf[30];   // FIXME: Take more string length
     int idx = 0;
@@ -364,8 +364,8 @@ int json_replace_buffer(json_t *obj, void *new_buf, size_t size)
     void *old_buf = obj->buf;
     // Because in some system the offset is beyond signed int
     // TODO: check if long int is always 32 bit in 32 bit system and 64 bit in 64 bit system
-    int is_plus = ((new_buf - old_buf) > 0)? 1: 0;
-    unsigned long int offset = (is_plus)?(new_buf - old_buf):(old_buf - new_buf);
+    char is_plus = ((new_buf - old_buf) > 0)? 1: 0;
+    size_t offset = (is_plus)?(new_buf - old_buf):(old_buf - new_buf);
     for (size_t i = 0; i < _table_size(obj); i++)
     {
         _entry_t *entry = (_table_ptr(obj) + i);
@@ -429,8 +429,8 @@ json_t json_copy(void *dest_buf, json_t *obj)
 {
     // Because in some system the offset is beyond signed int
     // TODO: check if long int is always 32 bit in 32 bit system and 64 bit in 64 bit system
-    int is_plus = ((dest_buf - obj->buf) > 0)? 1: 0;
-    unsigned long int offset = (is_plus)?(dest_buf - obj->buf):(obj->buf - dest_buf);
+    char is_plus = ((dest_buf - obj->buf) > 0)? 1: 0;
+    size_t offset = (is_plus)?(dest_buf - obj->buf):(obj->buf - dest_buf);
     memcpy(dest_buf, obj->buf, _buf_size(obj));
     json_t new_obj = { 
         .buf = dest_buf
@@ -459,17 +459,17 @@ json_t json_copy(void *dest_buf, json_t *obj)
  * Other utility functions
  ******************************************************************************/
 
-int json_table_size(json_t *obj)
+size_t json_table_size(json_t *obj)
 {
     return _table_size(obj);
 }
 
-int json_count(json_t *obj)
+size_t json_count(json_t *obj)
 {
     return _entry_count(obj);
 }
 
-int json_buffer_size(json_t *obj)
+size_t json_buffer_size(json_t *obj)
 {
     return _buf_size(obj);
 }
@@ -481,7 +481,7 @@ int json_buffer_size(json_t *obj)
 static int _get_idx(json_t *obj, char *key)
 {
     int32_t hash = json_hash(key);
-    int idx = hash & (_table_size(obj) - 1);
+    size_t idx = hash & (_table_size(obj) - 1);
     _entry_t entry;
     
     // variables for open addressing
@@ -534,8 +534,8 @@ static int _insert(json_t *obj, char *key, void *value, size_t size, json_value_
     }
     
     // buffer size check
-    int key_size = strlen(key) + 1;
-    int value_size = size + 1;
+    size_t key_size = strlen(key) + 1;
+    size_t value_size = size + 1;
     size_t buf_required = key_size + value_size;
     if (_buf_idx(obj) + buf_required > _buf_size(obj))
     {

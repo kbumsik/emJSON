@@ -68,11 +68,11 @@ emJSON_free(&test);
 Supported Devices
 -----------------
 
-* x86 and x86-64 based general purpose computers (such as Windows/Linux/Unix computers.)
+* Arduino and AVR Microcontrollers (tested using Arduino Uno)
 * 32-bit ARM Cortex-M devices
   * NUCLEO-F4xx series (tested in [mbed](https://developer.mbed.org/compiler/) platform)
   * Other Cortex-M MCUs should work too.
-* Arduino and AVR Microcontrollers (Not yet, planned.)
+* x86 and x86-64 based general purpose computers (such as Windows/Linux/Unix computers.)
 
 How To Use
 ----------
