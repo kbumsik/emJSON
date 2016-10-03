@@ -417,7 +417,7 @@ int json_double_table(json_t *obj)
         json_insert(&tmp_obj, entry->key, entry->value_ptr, entry->value_type);
     }
     // Then replace buffer
-    json_replace_buffer(&tmp_obj, obj->buf, _buf_size(obj)); // FIXME: Problem here.
+    json_replace_buffer(&tmp_obj, obj->buf, _buf_size(obj));
     
     // Then replace table
     obj->buf = tmp_obj.buf;

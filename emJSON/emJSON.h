@@ -11,6 +11,10 @@
 	#define EMJSON_INIT_TABLE_SIZE  4
 #endif
 
+#ifdef __cplusplus
+extern "C"{
+#endif
+
 // high-level functions
 json_t emJSON_init();
 int emJSON_parse(json_t *obj, char *input);
@@ -40,5 +44,9 @@ char *emJSON_string(json_t *obj);
 int emJSON_strcpy(char *dest, json_t *obj);
 
 int emJSON_free(json_t *obj);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif	// __EMJSON_H__

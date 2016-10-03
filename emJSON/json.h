@@ -29,6 +29,10 @@ typedef struct
     void *buf;
 }json_t;
 
+#ifdef __cplusplus
+extern "C"{
+#endif
+
 // core utility functions
 int32_t json_hash(char *str);
 
@@ -69,5 +73,9 @@ json_t json_copy(void *dest_buf, json_t *obj);
 int json_table_size(json_t *obj);
 int json_count(json_t *obj);
 int json_buffer_size(json_t *obj);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // __JSON_H__
