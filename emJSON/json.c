@@ -51,7 +51,6 @@ static inline size_t _content_byte_size(json_t *obj)
         (sizeof(header_t_) + header_ptr_(obj)->table_size * sizeof(entry_t_));
 }
 
-
 /*******************************************************************************
  * Core Utility functions
  ******************************************************************************/
@@ -259,100 +258,6 @@ int json_set_int(json_t *obj, char *key, int value)
 int json_set_float(json_t *obj, char *key, float value)
 {
     return json_set(obj, key, &value);
-}
-
-/*******************************************************************************
- * String-related functions
- ******************************************************************************/
-
-int json_strcpy(char *dest, json_t *obj)
-{
-    char str_buf[30];   // FIXME: Take more string length
-    int idx = 0;
-    memset(dest + idx, '{', 1);
-    idx += 1;
-    // start
-    for (size_t i = 0; i < table_size_(obj); i++)
-    {
-        entry_t_ entry = table_ptr_(obj)[i];
-        if (NULL == entry.key)
-        {	// empty entry
-            continue;
-        }
-        // copy key: "<key>":
-        memset(dest + idx, '\"', 1);
-        idx += 1;
-        int str_len = strlen(entry.key);
-        strcpy(dest + idx, entry.key);
-        strcpy(dest + idx + str_len, "\":");
-        idx += str_len + 2;
-        // copy value: "<value>",
-        switch (entry.value_type)
-        {
-        case JSON_INT:
-            sprintf(str_buf, "%d", *(int *)entry.value_ptr);
-            break;
-        case JSON_FLOAT:
-            sprintf(str_buf, "%f", *(float *)entry.value_ptr);
-            break;
-        case JSON_STRING:
-            memset(dest + idx, '\"', 1);
-            idx += 1;
-            sprintf(str_buf, "%s", (char *)entry.value_ptr);
-            break;
-        default:
-            return JSON_ERROR;
-        }
-        str_len = strlen(str_buf);
-        strcpy(dest + idx, str_buf);
-        strcpy(dest + idx + str_len, (JSON_STRING == entry.value_type) ? "\"," : ",");
-        idx += str_len + ((JSON_STRING == entry.value_type)? 2 : 1);
-    }
-    // it's the end
-    // -1 is to remove the last ','.
-    strcpy(dest + idx -1, "}");
-    return JSON_OK;
-}
-
-size_t json_strlen(json_t *obj)
-{
-    char str_buf[30];   // FIXME: Take more string length
-    int idx = 0;
-    idx += 1;	// '{'
-    // start
-    for (size_t i = 0; i < table_size_(obj); i++)
-    {
-        entry_t_ entry = table_ptr_(obj)[i];
-        if (NULL == entry.key)
-        {	// empty entry
-            continue;
-        }
-        // "<key>":
-        idx += 1; // '\"'
-        int str_len = strlen(entry.key);
-        idx += str_len + 2;	// <key>":
-        // "<value>",
-        switch (entry.value_type)
-        {
-        case JSON_INT:
-            sprintf(str_buf, "%d", *(int *)entry.value_ptr);
-            break;
-        case JSON_FLOAT:
-            sprintf(str_buf, "%f", *(float *)entry.value_ptr);
-            break;
-        case JSON_STRING:
-            idx += 1;	// '\"'
-            sprintf(str_buf, "%s", (char *)entry.value_ptr);
-            break;
-        default:
-            return JSON_ERROR;
-        }
-        str_len = strlen(str_buf);
-        idx += str_len + ((JSON_STRING == entry.value_type) ? 2 : 1); // <value>",
-    }
-    // it's the end, '}'
-    // consider removing the last ','.
-    return idx;
 }
 
 /*******************************************************************************
