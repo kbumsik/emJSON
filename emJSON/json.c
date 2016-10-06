@@ -52,18 +52,40 @@ static inline size_t _content_byte_size(json_t *obj)
 }
 
 /*******************************************************************************
- * Core Utility functions
+ * Core Hash function
  ******************************************************************************/
+
+/*
+ * Hash settings
+ */
+
+// Hash functions
+#define EMJSON_HASH(hash, cha) EMJSON_JAVA_HASH(hash, cha)
+	// 1000003 from python dictionary implementation,
+	#define EMJSON_PYTHON_HASH(hash, cha)	((1000003 * hash) ^ cha)
+	// 31 from Java Hashmap
+	#define EMJSON_JAVA_HASH(hash, cha)		((hash << 5) - hash + cha)
+	// 101 from Microsoft Research.
+	#define EMSJOSN_MS_HASH(hash, cha)		((101 * hash) + cha)
+
+// Hash starting value
+#define EMJSON_HASH_START(cha) EMJSON_JAVA_HASH_START(cha)
+	// 1000003 from python dictionary implementation,
+	#define EMJSON_PYTHON_HASH_START(cha) (cha << 7)
+	// 31 from Java Hashmap
+	#define EMJSON_JAVA_HASH_START(cha) (0)
+	// 101 from Microsoft Research.
+	#define EMSJOSN_MS_HASH_START(cha) (0)
 
 int32_t json_hash(char *str)
 {
     char *ptr = str;
     size_t len = 0;
-    int32_t result = *ptr << 7;
+    int32_t result = EMJSON_HASH_START(*ptr);
     for (; *ptr != '\0'; ptr++)
     {
         char cha = *ptr;
-        result = (1000003 * result) ^ cha; //XOR
+        result = EMJSON_HASH(result, cha);
         len += 1;
     }
     result ^= len;
