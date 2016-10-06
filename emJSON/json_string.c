@@ -20,7 +20,7 @@ static inline int is_digit_(char input);
 
 #include <stddef.h>
 
-// internals
+// xtox funtions
 struct atox_ret_t_
 {
 	int ret_int;
@@ -29,7 +29,9 @@ struct atox_ret_t_
 };
 
 static struct atox_ret_t_ atoi_(const char *str);
+static struct atox_ret_t_ atof_(const char *str);
 static int itoa_(int input, char *str, int base);
+static int ftoa_(float input, char *str);
 
 typedef struct
 {
@@ -367,7 +369,8 @@ int json_strcpy(char *dest, json_t *obj)
         	itoa_(*(int *)entry.value_ptr, str_buf, 10);
             break;
         case JSON_FLOAT:
-            sprintf(str_buf, "%f", *(float *)entry.value_ptr);
+        	ftoa_(*(float *)entry.value_ptr, str_buf);
+            // sprintf(str_buf, "%f", *(float *)entry.value_ptr);
             break;
         case JSON_STRING:
             memset(dest + idx, '\"', 1);
@@ -412,13 +415,11 @@ size_t json_strlen(json_t *obj)
         	str_len = itoa_(*(int *)entry.value_ptr, str_buf, 10);
             break;
         case JSON_FLOAT:
-            sprintf(str_buf, "%f", *(float *)entry.value_ptr);
-            str_len = strlen(str_buf);
+        	str_len = ftoa_(*(float *)entry.value_ptr, str_buf);
             break;
         case JSON_STRING:
             idx += 1;	// '\"'
-            sprintf(str_buf, "%s", (char *)entry.value_ptr);
-            str_len = strlen(str_buf);
+            str_len = strlen((char *)entry.value_ptr);
             break;
         default:
             return JSON_ERROR;
@@ -439,6 +440,7 @@ static int insert_(json_t *obj, parser_result_t_ *key, parser_result_t_ *value)
     *value->j = '\0';
     // convert value.
     int32_t input = 0;
+    float input_f = 0.0;
     void *input_ptr = &input;
     switch (value->result_type)
     {
@@ -449,7 +451,9 @@ static int insert_(json_t *obj, parser_result_t_ *key, parser_result_t_ *value)
     	input = atoi_(value->i).ret_int;
         break;
     case JSON_FLOAT:
-        sscanf(value->i, "%f", (float *)input_ptr);
+        input_f = atof_(value->i).ret_float;
+        input_ptr = &input_f;
+    	//sscanf(value->i, "%f", (float *)input_ptr);
         break;
     default:
         return JSON_ERROR;
@@ -481,38 +485,9 @@ static inline int is_digit_(char input)
     else return 0;
 }
 
-
-
-// Functions definitions
-
-static int itoa_(int input, char *str, int base)
-{
-	unsigned int n = 0;
-	int d = 1;
-	if (input < 0)
-	{
-		*str++ = '-';
-		input *= -1;
-		n++;	// TODO: check it putting n++ here is OK
-	}
-	while((input / d) >= base)
-	{
-		d *= base;
-	}
-	while (d != 0)
-	{
-		int digit = input / d;
-		input %= d;
-		d /= base;
-		if (n || digit > 0 || d == 0)
-		{
-			*str++ = digit + ((digit < 10)? '0': 'a' - 10);
-			n++;
-		}
-	}
-	*str = '\0';
-	return n;
-}
+/*******************************************************************************
+ * xtox funtions
+ ******************************************************************************/
 
 struct atox_ret_t_ atoi_(const char *str)
 {
@@ -543,4 +518,244 @@ struct atox_ret_t_ atoi_(const char *str)
 		.len = len
 	};
 	return ret;
+}
+
+struct atox_ret_t_ atof_(const char *str)
+{
+	struct atox_ret_t_ ret;
+	struct atox_ret_t_ tmp;
+	uint8_t is_plus = 1;
+	int int_part = 0;	// integer part
+	float frac_part = 0;	// fraction part
+	size_t frac_len = 0;// length of fraction part
+	int expo_part = 0;	// exponent part
+
+	unsigned int len = 0;
+	if (NULL == str)
+	{
+		return (struct atox_ret_t_){0};
+	}
+	// get integer part
+	if (*str == '-')
+	{
+		is_plus = 0;
+		str += 1;
+		len += 1; //TODO: check if it is necessary
+	}
+	tmp = atoi_(str);
+	int_part = tmp.ret_int;
+
+	str += tmp.len;
+	len += tmp.len;
+
+	// get fraction part check
+	if(*str == '.')
+	{
+		str += 1;
+		tmp = atoi_(str);
+		frac_part = (float) tmp.ret_int;
+		frac_len = tmp.len;
+
+		str += tmp.len;
+		len += tmp.len + 1;
+	}
+
+	// exponent part
+    if (*str == 'e' ||
+        *str == 'E')
+    {
+    	str += 1;
+    	tmp = atoi_(str);
+    	expo_part = tmp.ret_int;
+
+    	str += tmp.len;
+    	len += tmp.len + 1;
+    }
+
+    // put them together
+    ret.ret_float = (float) int_part;
+    if (frac_len > 0)
+    {
+    	// add fraction
+        int frac_divisor = 1;
+        for(; frac_len > 0; frac_len--)
+        {
+        	frac_divisor *= 10;
+        }
+        frac_part /= frac_divisor;
+        if (ret.ret_float < 0)
+        {
+        	ret.ret_float *= -1;
+        	ret.ret_float += frac_part;
+        	ret.ret_float *= -1;
+        }
+        else
+        {
+        	ret.ret_float += frac_part;
+        }
+    }
+
+    if (expo_part != 0)
+    {
+    	// multiply exponent
+    	int expo_multiplier = 1;
+    	int8_t expo_signed = 1;
+    	if (expo_part < 0)
+    	{
+    		expo_part *= -1;
+    		expo_signed = 0;
+    	}
+        for(; expo_part > 0; expo_part--)
+        {
+        	expo_multiplier *= 10;
+        }
+        if (expo_signed)
+        {
+        	ret.ret_float *= expo_multiplier;
+        }
+        else
+        {
+        	ret.ret_float /= expo_multiplier;
+        }
+    }
+
+    if (!is_plus)
+    {
+    	ret.ret_float *= -1;
+    }
+    // done
+    ret.len = len;
+	return ret;
+}
+
+static int itoa_(int input, char *str, int base)
+{
+	unsigned int n = 0;
+	int d = 1;
+	if (input < 0)
+	{
+		*str++ = '-';
+		input *= -1;
+		n++;	// TODO: check it putting n++ here is OK
+	}
+	while((input / d) >= base)
+	{
+		d *= base;
+	}
+	while (d != 0)
+	{
+		int digit = input / d;
+		input %= d;
+		d /= base;
+		if (n || digit > 0 || d == 0)
+		{
+			*str++ = digit + ((digit < 10)? '0': 'a' - 10);
+			n++;
+		}
+	}
+	*str = '\0';
+	return n;
+}
+
+static int ftoa_(float value, char* str)
+{
+    union
+    {
+        float f;
+        struct
+        {
+            uint16_t    mantissa_lo : 16;
+            uint16_t    mantissa_hi : 7;
+            uint16_t    exponent : 8;
+            uint8_t     sign : 1;
+        } bits;
+    } input;
+	uint32_t mantissa;
+	uint32_t int_part;
+	uint32_t frac_part;
+	int16_t exponent;
+	char *p;
+
+
+	if (value == 0.0)
+	{
+		strcpy(str, "0,0");
+		return 1;
+	}
+
+	input.f = value;
+	mantissa = input.bits.mantissa_lo;
+	mantissa += ((unsigned long) input.bits.mantissa_hi << 16);
+	//add the 24th bit to get 1.mmmm^eeee format
+    mantissa += 0x00800000;
+    exponent = input.bits.exponent - 127;
+	frac_part = 0;
+	int_part = 0;
+
+	if (exponent >= 31)
+	{
+		strcpy(str, "Inf");
+		return 3;
+	}
+	else if (exponent < -23)
+	{
+		strcpy(str, "0");
+		return 1;
+	}
+	else if (exponent >= 23)
+	{
+		int_part = mantissa << (exponent - 23);
+	}
+	else if (exponent >= 0)
+	{
+		int_part = mantissa >> (23 - exponent);
+		frac_part = (mantissa << (exponent + 1)) & 0xFFFFFF;
+	}
+	else /* if (exponent < 0) */
+	{
+		frac_part = (mantissa & 0xFFFFFF) >> (-(exponent + 1));
+	}
+
+	p = str;
+
+	if (input.bits.sign)
+	{
+		*p++ = '-';
+	}
+	if (int_part == 0)
+	{
+		*p++ = '0';
+	}
+	else
+	{
+		itoa_(int_part, p, 10);
+		while (*p)
+			p++;
+	}
+	*p++ = '.';
+
+	if (frac_part == 0)
+	{
+		*p++ = '0';
+	}
+	else
+	{
+		int32_t i;
+		/* print BCD */
+		for (i = 0; i < 5; i++)
+		{
+			/* frac_part *= 10;	*/
+			frac_part = (frac_part << 3) + (frac_part << 1);
+
+			*p++ = (frac_part >> 24) + '0';
+			frac_part &= 0xFFFFFF;
+		}
+		/* delete ending zeroes */
+		for (--p; p[0] == '0' && p[-1] != '.'; --p)
+		;
+		++p;
+	}
+	*p = 0;
+
+	return strlen(str);
 }

@@ -18,24 +18,23 @@ DigitalOut myled(LED1);
 
 int main() {
   // start JSON object.
-  char json_input[] = "{\"message\":\"This is JSON object.\"}";
+  char json_input[] = "{\"message\":\"This is JSON object.\",\"time\":0.5}";
   json_t json = emJSON_init();
   emJSON_parse(&json, json_input);
   emJSON_insert_int(&json, "led", 0);
-  emJSON_insert_int(&json, "timer", 0);
 
   // init variables
-  char message[128];
+  char message[256];
   int led = myled;
-  int timer = 0;
+  float timer = emJSON_get_float(&json, "time");
 
-  pc.printf("Hello JSON!\n");
+  pc.printf("Hello JSON! %f\n");
   while(1) {
-      wait(1);
-      timer++;
+      wait_ms(500);
+      timer = timer + (float)0.5;
       myled = !myled;
       led = myled;
-      emJSON_set_int(&json, "timer", timer);
+      emJSON_set_float(&json, "time", timer);
       emJSON_set_int(&json, "led", led);
 
       emJSON_strcpy(message, &json);
@@ -43,3 +42,4 @@ int main() {
   }
   emJSON_free(&json);
 }
+
