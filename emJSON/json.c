@@ -19,21 +19,21 @@ static int insert_(json_t *obj, char *key, void *value, size_t size, json_type_t
 
 // Hash functions
 #define EMJSON_HASH(hash, cha) EMJSON_JAVA_HASH(hash, cha)
-	// 1000003 from python dictionary implementation,
-	#define EMJSON_PYTHON_HASH(hash, cha)	((1000003 * hash) ^ cha)
-	// 31 from Java Hashmap
-	#define EMJSON_JAVA_HASH(hash, cha)		((hash << 5) - hash + cha)
-	// 101 from Microsoft Research.
-	#define EMSJOSN_MS_HASH(hash, cha)		((101 * hash) + cha)
+    // 1000003 from python dictionary implementation,
+    #define EMJSON_PYTHON_HASH(hash, cha)    ((1000003 * hash) ^ cha)
+    // 31 from Java Hashmap
+    #define EMJSON_JAVA_HASH(hash, cha)        ((hash << 5) - hash + cha)
+    // 101 from Microsoft Research.
+    #define EMSJOSN_MS_HASH(hash, cha)        ((101 * hash) + cha)
 
 // Hash starting value
 #define EMJSON_HASH_START(cha) EMJSON_JAVA_HASH_START(cha)
-	// 1000003 from python dictionary implementation,
-	#define EMJSON_PYTHON_HASH_START(cha) (cha << 7)
-	// 31 from Java Hashmap
-	#define EMJSON_JAVA_HASH_START(cha) (0)
-	// 101 from Microsoft Research.
-	#define EMSJOSN_MS_HASH_START(cha) (0)
+    // 1000003 from python dictionary implementation,
+    #define EMJSON_PYTHON_HASH_START(cha) (cha << 7)
+    // 31 from Java Hashmap
+    #define EMJSON_JAVA_HASH_START(cha) (0)
+    // 101 from Microsoft Research.
+    #define EMSJOSN_MS_HASH_START(cha) (0)
 
 int32_t json_hash(char *str)
 {
@@ -47,7 +47,7 @@ int32_t json_hash(char *str)
         len += 1;
     }
     result ^= len;
-    return result;	
+    return result;    
 }
 
 /*******************************************************************************
@@ -95,7 +95,7 @@ int json_delete(json_t *obj, char *key)
     
     for (size_t i = 0; i < header_ptr_(&tmp_obj)->table_size; i++)
     {
-    	struct entry_ *entry = (table_ptr_(&tmp_obj) + i);
+        struct entry_ *entry = (table_ptr_(&tmp_obj) + i);
         if (NULL == entry->key)
         {
             continue;
@@ -167,9 +167,10 @@ int json_insert_str(json_t *obj, char *key, char *value)
 void *json_get(json_t *obj, char *key, json_type_t type)
 {
     int idx = get_idx_(obj, key);
+        JSON_DEBUG_PRINTF("json_get(): found index %d.\n", idx);
     if (idx >= 0)
     {
-    	json_type_t target_type = table_ptr_(obj)[idx].value_type;
+                json_type_t target_type = table_ptr_(obj)[idx].value_type;
         return (target_type == type)? table_ptr_(obj)[idx].value_ptr : NULL;
     }
     return NULL;
@@ -178,13 +179,24 @@ void *json_get(json_t *obj, char *key, json_type_t type)
 int json_get_int(json_t *obj, char *key)
 {
     void *result = json_get(obj, key, JSON_INT);
-    return (NULL != result) ? *(int *)result : 0;
+    return (NULL != result) ? (*(int *)result) : 0;
 }
 
 float json_get_float(json_t *obj, char *key)
 {
     void *result = json_get(obj, key, JSON_FLOAT);
-    return (NULL != result) ? *(float *)result : (float)0.0;
+#ifdef __CC_ARM
+        // in uVision(keil) and mbed compiler cause hardfault when
+        // just assigned like:
+        // value = *(float *)result;
+        // the VLDR instruction causes hard fault. I don't know why.
+        // So I use memcpy() instead.
+        float value;
+        memcpy(&value, result, sizeof(4));
+    return value;
+#else // like __GNUC__
+    return (NULL != result) ? (*(float *)result) : 0;
+#endif
 }
 
 char *json_get_str(json_t *obj, char *key)
@@ -201,7 +213,7 @@ int json_set(json_t *obj, char *key, void *value)
     int idx = get_idx_(obj, key);
     if (idx >= 0)
     {
-    	struct entry_ *entry = table_ptr_(obj) + idx;
+        struct entry_ *entry = table_ptr_(obj) + idx;
         memcpy(entry->value_ptr, value, entry->value_size);
         return JSON_OK;
     }
@@ -219,7 +231,7 @@ int json_set_str(json_t *obj, char *key, char *value)
     int idx = get_idx_(obj, key);
     if (idx >= 0)
     {
-    	struct entry_ *entry = table_ptr_(obj) + idx;
+        struct entry_ *entry = table_ptr_(obj) + idx;
         if (size > entry->value_size)
         {
             return JSON_ENTRY_BUFFER_FULL;
@@ -252,7 +264,7 @@ int json_replace_buffer(json_t *obj, void *new_buf, size_t size)
     size_t offset = (is_plus)?(new_buf - old_buf):(old_buf - new_buf);
     for (size_t i = 0; i < table_size_(obj); i++)
     {
-    	struct entry_ *entry = (table_ptr_(obj) + i);
+        struct entry_ *entry = (table_ptr_(obj) + i);
         if (NULL == entry->key)
         {
             continue;
@@ -294,7 +306,7 @@ int json_double_table(json_t *obj)
     
     for (size_t i = 0; i < table_size_(obj); i++)
     {
-    	struct entry_ *entry = (table_ptr_(obj) + i);
+        struct entry_ *entry = (table_ptr_(obj) + i);
         if (NULL == entry->key)
         {
             continue;
@@ -364,56 +376,57 @@ size_t json_buffer_size(json_t *obj)
 
 void json_debug_print_obj(json_t *obj)
 {
-	JSON_DEBUG_PRINTF("==========================\n");
-	JSON_DEBUG_PRINTF("\t emJSON object block\n");
-	JSON_DEBUG_PRINTF("==========================\n");
-	JSON_DEBUG_PRINTF("Buffer size: 0x%x\n", (unsigned int)buf_size_(obj));
-	JSON_DEBUG_PRINTF("Current buffer index: 0x%x\n", (unsigned int)buf_idx_(obj));
-	JSON_DEBUG_PRINTF("Size of table : %lu\n", table_size_(obj));
-	JSON_DEBUG_PRINTF("Entry count : %lu\n", entry_count_(obj));
-	// Print pointers
-	JSON_DEBUG_PRINTF("Header Pointer : %p\n", header_ptr_(obj));
-	JSON_DEBUG_PRINTF("Size of table b0xytes: %x\n", (unsigned int)sizeof(struct header_));
-	JSON_DEBUG_PRINTF("Table Pointer : %p\n", table_ptr_(obj));
-	JSON_DEBUG_PRINTF("Size of each entry in the table: 0x%x\n", (unsigned int)sizeof(struct entry_));
-	JSON_DEBUG_PRINTF("Size of table in bytes: 0x%x\n", (unsigned int)table_byte_size_(obj));
-	JSON_DEBUG_PRINTF("Content Pointer : %p\n", content_ptr_(obj));
-	JSON_DEBUG_PRINTF("Size of Content in bytes: 0x%x\n", (unsigned int)content_byte_size_(obj));
+    JSON_DEBUG_PRINTF("==========================\n");
+    JSON_DEBUG_PRINTF("\t emJSON object block\n");
+    JSON_DEBUG_PRINTF("==========================\n");
+    JSON_DEBUG_PRINTF("Buffer size: 0x%x\n", (unsigned int)buf_size_(obj));
+    JSON_DEBUG_PRINTF("Current buffer index: 0x%x\n", (unsigned int)buf_idx_(obj));
+    JSON_DEBUG_PRINTF("Size of table : %lu\n", table_size_(obj));
+    JSON_DEBUG_PRINTF("Entry count : %lu\n", entry_count_(obj));
+    // Print pointers
+    JSON_DEBUG_PRINTF("Header Pointer : %p\n", header_ptr_(obj));
+    JSON_DEBUG_PRINTF("Size of table in bytes: 0x%x\n", (unsigned int)sizeof(struct header_));
+    JSON_DEBUG_PRINTF("Table Pointer : %p\n", table_ptr_(obj));
+    JSON_DEBUG_PRINTF("Size of each entry in the table: 0x%x\n", (unsigned int)sizeof(struct entry_));
+    JSON_DEBUG_PRINTF("Size of table in bytes: 0x%x\n", (unsigned int)table_byte_size_(obj));
+    JSON_DEBUG_PRINTF("Content Pointer : %p\n", content_ptr_(obj));
+    JSON_DEBUG_PRINTF("Size of Content in bytes: 0x%x\n", (unsigned int)content_byte_size_(obj));
 
     for (int i = 0; i < (int)header_ptr_(obj)->table_size; i++)
     {
-    	struct entry_ *entry = (table_ptr_(obj) + i);
-    	JSON_DEBUG_PRINTF("--------------------------\n");
-    	JSON_DEBUG_PRINTF("\t Entry %d\n", i);
-    	JSON_DEBUG_PRINTF("--------------------------\n");
+        struct entry_ *entry = (table_ptr_(obj) + i);
+        JSON_DEBUG_PRINTF("--------------------------\n");
+        JSON_DEBUG_PRINTF("\t Entry %d\n", i);
+        JSON_DEBUG_PRINTF("--------------------------\n");
         if (NULL == entry->key)
         {
-        	JSON_DEBUG_PRINTF("ENTRY IS EMPTY\n");
+            JSON_DEBUG_PRINTF("ENTRY IS EMPTY\n");
             continue;
         }
-    	JSON_DEBUG_PRINTF("Key : %s\n", entry->key);
-    	JSON_DEBUG_PRINTF("Key pointer: %p\n", (void *)entry->key);
-    	JSON_DEBUG_PRINTF("Key length: 0x%x\n", (unsigned int)strlen(entry->key));
-    	JSON_DEBUG_PRINTF("Hash : %u\n", entry->hash);
-    	JSON_DEBUG_PRINTF("Value pointer : %p\n", entry->value_ptr);
-    	JSON_DEBUG_PRINTF("Value length: 0x%x\n", entry->value_size);
+        JSON_DEBUG_PRINTF("Key : %s\n", entry->key);
+        JSON_DEBUG_PRINTF("Key pointer: %p\n", (void *)entry->key);
+        JSON_DEBUG_PRINTF("Key length: 0x%x\n", (unsigned int)strlen(entry->key) + 1);
+        JSON_DEBUG_PRINTF("Hash : %u\n", entry->hash);
+        JSON_DEBUG_PRINTF("Value pointer : %p\n", entry->value_ptr);
+        JSON_DEBUG_PRINTF("Value length: 0x%x\n", entry->value_size);
         // print type
         switch(entry->value_type)
         {
         case JSON_INT:
-        	JSON_DEBUG_PRINTF("Entry type : Integer\n");
-        	JSON_DEBUG_PRINTF("Value : %d\n", *(int *)entry->value_ptr);
-        	break;
+            JSON_DEBUG_PRINTF("Entry type : Integer\n");
+            JSON_DEBUG_PRINTF("Value : %d\n", *(int *)entry->value_ptr);
+            break;
         case JSON_FLOAT:
-        	JSON_DEBUG_PRINTF("Entry type : Floating Point\n");
-        	JSON_DEBUG_PRINTF("Value : %f\n", *(float *)entry->value_ptr);
-        	break;
+            JSON_DEBUG_PRINTF("Entry type : Floating Point\n");
+            JSON_DEBUG_PRINTF("Value : %f\n", *(float *)entry->value_ptr);
+            break;
         case JSON_STRING:
-        	JSON_DEBUG_PRINTF("Entry type : String\n");
-        	JSON_DEBUG_PRINTF("Value : %s\n", (char *)entry->value_ptr);
-        	break;
+            JSON_DEBUG_PRINTF("Entry type : String\n");
+            JSON_DEBUG_PRINTF("Charaters count : 0x%x\n", (unsigned int)strlen((char *)entry->value_ptr));
+            JSON_DEBUG_PRINTF("Value : %s\n", (char *)entry->value_ptr);
+            break;
         default:
-        	JSON_DEBUG_PRINTF("UNKOWN TYPE!!!\n");
+            JSON_DEBUG_PRINTF("UNKOWN TYPE!!!\n");
         }
         // print value dump
         char dump_str[17];
@@ -421,18 +434,18 @@ void json_debug_print_obj(json_t *obj)
         uint8_t *dump = (uint8_t *)entry->value_ptr;
         for (int j = 0; j < entry->value_size; j++)
         {
-        	sprintf(&dump_str[(2*j)%16], "%02x", (uint8_t)dump[j]);
-        	if( ((j%8 == 7)) || (j == (entry->value_size -1)) )
-        	{
-        		JSON_DEBUG_PRINTF("%s\n", dump_str);
+            sprintf(&dump_str[(2*j)%16], "%02x", (uint8_t)dump[j]);
+            if( ((j%8 == 7)) || (j == (entry->value_size -1)) )
+            {
+                JSON_DEBUG_PRINTF("%s\n", dump_str);
                 memset(dump_str, 0, 17);
-        	}
+            }
         }
         memset(dump_str, 0, 17);
     }
-	JSON_DEBUG_PRINTF("==========================\n");
-	JSON_DEBUG_PRINTF("\t End printing\n");
-	JSON_DEBUG_PRINTF("==========================\n");
+    JSON_DEBUG_PRINTF("==========================\n");
+    JSON_DEBUG_PRINTF("\t End printing\n");
+    JSON_DEBUG_PRINTF("==========================\n");
     return;
 }
 
@@ -513,9 +526,9 @@ static int insert_(json_t *obj, char *key, void *value, size_t size, json_type_t
     
     int perturb = new_entry.hash;
     while (NULL != (table_ptr_(obj)[new_idx].key))
-    {	// collision, open addressing
+    {    // collision, open addressing
         if (new_entry.hash == table_ptr_(obj)[new_idx].hash)
-        {	// collision, and the hash are the same (same key)
+        {    // collision, and the hash are the same (same key)
             return JSON_KEY_EXISTS;
         }
         new_idx = (new_idx << 2) + new_idx + 1 + perturb;

@@ -21,13 +21,13 @@ static int is_ws_(char input);
 static inline int is_digit_(char input);
 
 /*
- *	Converter-related structs and functions
+ *  Converter-related structs and functions
  */
 struct atox_ret_
 {
-	int value_int;
-	float value_float;
-	uint8_t str_len;
+    int value_int;
+    float value_float;
+    uint8_t str_len;
 };
 
 static struct atox_ret_ atoi_(const char *str);
@@ -185,7 +185,7 @@ int json_parse(json_t *obj, char *input)
 
 static struct parser_result_ check_string_(char *input)
 {
-	struct parser_result_ ret = {
+    struct parser_result_ ret = {
         .i = NULL,
         .j = NULL,
         .result_type = JSON_UNKNOWN
@@ -215,7 +215,7 @@ static struct parser_result_ check_string_(char *input)
 
 static struct parser_result_ check_number_(char *input)
 {
-	struct parser_result_ ret = {
+    struct parser_result_ ret = {
         .i = NULL,
         .j = NULL,
         .result_type = JSON_UNKNOWN
@@ -254,10 +254,10 @@ static struct parser_result_ check_number_(char *input)
         switch (state)
         {
         case integer:
-        	if (*ret.j == '-')
-        	{
-        		ret.j += 1;
-        	}
+            if (*ret.j == '-')
+            {
+                ret.j += 1;
+            }
             while (is_digit_(*ret.j))
             {
                 ret.j += 1;
@@ -273,10 +273,10 @@ static struct parser_result_ check_number_(char *input)
             state = end;
             break;
         case decimal:
-        	if (*ret.j == '-')
-        	{
-        		ret.j += 1;
-        	}
+            if (*ret.j == '-')
+            {
+                ret.j += 1;
+            }
             while (is_digit_(*ret.j))
             {
                 ret.j += 1;
@@ -332,9 +332,9 @@ int json_strcpy(char *dest, json_t *obj)
     // start
     for (size_t i = 0; i < table_size_(obj); i++)
     {
-    	struct entry_ entry = table_ptr_(obj)[i];
+        struct entry_ entry = table_ptr_(obj)[i];
         if (NULL == entry.key)
-        {	// empty entry
+        {    // empty entry
             continue;
         }
         // copy key: "<key>":
@@ -348,11 +348,22 @@ int json_strcpy(char *dest, json_t *obj)
         switch (entry.value_type)
         {
         case JSON_INT:
-        	itoa_(*(int *)entry.value_ptr, str_buf, 10);
+                        itoa_(*(int *)entry.value_ptr, str_buf, 10);
             break;
         case JSON_FLOAT:
-        	ftoa_(*(float *)entry.value_ptr, str_buf);
+                #ifdef __CC_ARM
+                // For the same problem in json_get_float();
+                // The VLDR instruction causes hard fault....
+                {
+                        float value;
+                        memcpy(&value, entry.value_ptr, sizeof(float));
+                        ftoa_(value, str_buf);
+                        break;
+                }
+                #else
+                        ftoa_(*(float *)entry.value_ptr, str_buf);
             break;
+                #endif
         case JSON_STRING:
             memset(dest + idx, '\"', 1);
             idx += 1;
@@ -376,30 +387,30 @@ int json_strlen(json_t *obj)
 {
     char str_buf[30];   // FIXME: Take more string length
     int idx = 0;
-    idx += 1;	// '{'
+    idx += 1;    // '{'
     // start
     for (size_t i = 0; i < table_size_(obj); i++)
     {
-    	struct entry_ entry = table_ptr_(obj)[i];
+        struct entry_ entry = table_ptr_(obj)[i];
         if (NULL == entry.key)
-        {	// empty entry
+        {    // empty entry
             continue;
         }
         // "<key>":
         idx += 1; // '\"'
         int str_len = strlen(entry.key);
-        idx += str_len + 2;	// <key>":
+        idx += str_len + 2;    // <key>":
         // "<value>",
         switch (entry.value_type)
         {
         case JSON_INT:
-        	str_len = itoa_(*(int *)entry.value_ptr, str_buf, 10);
+            str_len = itoa_(*(int *)entry.value_ptr, str_buf, 10);
             break;
         case JSON_FLOAT:
-        	str_len = ftoa_(*(float *)entry.value_ptr, str_buf);
+            str_len = ftoa_(*(float *)entry.value_ptr, str_buf);
             break;
         case JSON_STRING:
-            idx += 1;	// '\"'
+            idx += 1;    // '\"'
             str_len = strlen((char *)entry.value_ptr);
             break;
         default:
@@ -429,7 +440,7 @@ static int insert_(json_t *obj, struct parser_result_ *key, struct parser_result
         input_ptr = value->i;
         break;
     case JSON_INT:
-    	input = atoi_(value->i).value_int;
+        input = atoi_(value->i).value_int;
         break;
     case JSON_FLOAT:
         input_f = atof_(value->i).value_float;
@@ -471,170 +482,170 @@ static inline int is_digit_(char input)
 
 struct atox_ret_ atoi_(const char *str)
 {
-	struct atox_ret_ ret;
-	int ret_int = 0;
-	int8_t sign = 1;
-	unsigned int len = 0;
-	if (NULL == str)
-	{
-		return (struct atox_ret_){0};
-	}
-	if(*str == '-')
-	{
-		sign = -1;
-		str++;
-	}
-	for(;*str != '\0'; str++)
-	{
-		if (!(('0' <= *str) && (*str <= '9')))
-		{
-			break;
-		}
-		len += 1;
-		ret_int = ret_int * 10 + (*str - '0');
-	}
-	ret = (struct atox_ret_){
-		.value_int = ret_int * sign,
-		.str_len = len
-	};
-	return ret;
+    struct atox_ret_ ret;
+    int ret_int = 0;
+    int8_t sign = 1;
+    unsigned int len = 0;
+    if (NULL == str)
+    {
+        return (struct atox_ret_){0};
+    }
+    if(*str == '-')
+    {
+        sign = -1;
+        str++;
+    }
+    for(;*str != '\0'; str++)
+    {
+        if (!(('0' <= *str) && (*str <= '9')))
+        {
+            break;
+        }
+        len += 1;
+        ret_int = ret_int * 10 + (*str - '0');
+    }
+    ret = (struct atox_ret_){
+        .value_int = ret_int * sign,
+        .str_len = len
+    };
+    return ret;
 }
 
 struct atox_ret_ atof_(const char *str)
 {
-	struct atox_ret_ ret;
-	struct atox_ret_ tmp;
-	uint8_t is_plus = 1;
-	int int_part = 0;	// integer part
-	float frac_part = 0;	// fraction part
-	size_t frac_len = 0;// length of fraction part
-	int expo_part = 0;	// exponent part
+    struct atox_ret_ ret;
+    struct atox_ret_ tmp;
+    uint8_t is_plus = 1;
+    int int_part = 0;    // integer part
+    float frac_part = 0;    // fraction part
+    size_t frac_len = 0;// length of fraction part
+    int expo_part = 0;    // exponent part
 
-	unsigned int len = 0;
-	if (NULL == str)
-	{
-		return (struct atox_ret_){0};
-	}
-	// get integer part
-	if (*str == '-')
-	{
-		is_plus = 0;
-		str += 1;
-		len += 1;
-	}
-	tmp = atoi_(str);
-	int_part = tmp.value_int;
+    unsigned int len = 0;
+    if (NULL == str)
+    {
+        return (struct atox_ret_){0};
+    }
+    // get integer part
+    if (*str == '-')
+    {
+        is_plus = 0;
+        str += 1;
+        len += 1;
+    }
+    tmp = atoi_(str);
+    int_part = tmp.value_int;
 
-	str += tmp.str_len;
-	len += tmp.str_len;
+    str += tmp.str_len;
+    len += tmp.str_len;
 
-	// get fraction part check
-	if(*str == '.')
-	{
-		str += 1;
-		tmp = atoi_(str);
-		frac_part = (float) tmp.value_int;
-		frac_len = tmp.str_len;
+    // get fraction part check
+    if(*str == '.')
+    {
+        str += 1;
+        tmp = atoi_(str);
+        frac_part = (float) tmp.value_int;
+        frac_len = tmp.str_len;
 
-		str += tmp.str_len;
-		len += tmp.str_len + 1;
-	}
+        str += tmp.str_len;
+        len += tmp.str_len + 1;
+    }
 
-	// exponent part
+    // exponent part
     if (*str == 'e' ||
         *str == 'E')
     {
-    	str += 1;
-    	tmp = atoi_(str);
-    	expo_part = tmp.value_int;
+        str += 1;
+        tmp = atoi_(str);
+        expo_part = tmp.value_int;
 
-    	str += tmp.str_len;
-    	len += tmp.str_len + 1;
+        str += tmp.str_len;
+        len += tmp.str_len + 1;
     }
 
     // put them together
     ret.value_float = (float) int_part;
     if (frac_len > 0)
     {
-    	// add fraction
+        // add fraction
         int frac_divisor = 1;
         for(; frac_len > 0; frac_len--)
         {
-        	frac_divisor *= 10;
+            frac_divisor *= 10;
         }
         frac_part /= frac_divisor;
         if (ret.value_float < 0)
         {
-        	ret.value_float *= -1;
-        	ret.value_float += frac_part;
-        	ret.value_float *= -1;
+            ret.value_float *= -1;
+            ret.value_float += frac_part;
+            ret.value_float *= -1;
         }
         else
         {
-        	ret.value_float += frac_part;
+            ret.value_float += frac_part;
         }
     }
 
     if (expo_part != 0)
     {
-    	// multiply exponent
-    	int expo_multiplier = 1;
-    	int8_t expo_signed = 1;
-    	if (expo_part < 0)
-    	{
-    		expo_part *= -1;
-    		expo_signed = 0;
-    	}
+        // multiply exponent
+        int expo_multiplier = 1;
+        int8_t expo_signed = 1;
+        if (expo_part < 0)
+        {
+            expo_part *= -1;
+            expo_signed = 0;
+        }
         for(; expo_part > 0; expo_part--)
         {
-        	expo_multiplier *= 10;
+            expo_multiplier *= 10;
         }
         if (expo_signed)
         {
-        	ret.value_float *= expo_multiplier;
+            ret.value_float *= expo_multiplier;
         }
         else
         {
-        	ret.value_float /= expo_multiplier;
+            ret.value_float /= expo_multiplier;
         }
     }
 
     if (!is_plus)
     {
-    	ret.value_float *= -1;
+        ret.value_float *= -1;
     }
     // done
     ret.str_len = len;
-	return ret;
+    return ret;
 }
 
 static int itoa_(int input, char *str, int base)
 {
-	unsigned int n = 0;
-	int d = 1;
-	if (input < 0)
-	{
-		*str++ = '-';
-		input *= -1;
-		n++;
-	}
-	while((input / d) >= base)
-	{
-		d *= base;
-	}
-	while (d != 0)
-	{
-		int digit = input / d;
-		input %= d;
-		d /= base;
-		if (n || digit > 0 || d == 0)
-		{
-			*str++ = digit + ((digit < 10)? '0': 'a' - 10);
-			n++;
-		}
-	}
-	*str = '\0';
-	return n;
+    unsigned int n = 0;
+    int d = 1;
+    if (input < 0)
+    {
+        *str++ = '-';
+        input *= -1;
+        n++;
+    }
+    while((input / d) >= base)
+    {
+        d *= base;
+    }
+    while (d != 0)
+    {
+        int digit = input / d;
+        input %= d;
+        d /= base;
+        if (n || digit > 0 || d == 0)
+        {
+            *str++ = digit + ((digit < 10)? '0': 'a' - 10);
+            n++;
+        }
+    }
+    *str = '\0';
+    return n;
 }
 
 static int ftoa_(float value, char* str)
@@ -650,97 +661,97 @@ static int ftoa_(float value, char* str)
             uint8_t     sign : 1;
         } bits;
     } input;
-	uint32_t significand;
-	uint32_t int_part;
-	uint32_t frac_part;
-	int16_t exponent;
-	char *p;
+    uint32_t significand;
+    uint32_t int_part;
+    uint32_t frac_part;
+    int16_t exponent;
+    char *p;
 
 
-	if (value == (float)0.0)
-	{
-		strcpy(str, "0,0");
-		return 1;
-	}
+    if (value == (float)0.0)
+    {
+        strcpy(str, "0,0");
+        return 1;
+    }
 
-	input.f = value;
-	significand = input.bits.mantissa_lo;
-	significand += ((uint32_t) input.bits.mantissa_hi << 16);
-	//add the 24th bit to get 1.mmmm format
+    input.f = value;
+    significand = input.bits.mantissa_lo;
+    significand += ((uint32_t) input.bits.mantissa_hi << 16);
+    //add the 24th bit to get 1.mmmm format
     significand += 0x00800000;
     exponent = input.bits.exponent - 127;
-	int_part = 0;
+    int_part = 0;
 
-	// TODO: include exponent notation (E, e) in the string.
-	if (exponent >= 31)
-	{
-		strcpy(str, "Inf");
-		return 3;
-	}
-	else if (exponent < -23)
-	{
-		strcpy(str, "0");
-		return 1;
-	}
-	else if (exponent >= 23)
-	{	// significand bits are 23+1 bits so it need to be moved to show integer parts well. And it won't have faction part.
-		int_part = significand << (exponent - 23);
-		frac_part = 0;
-	}
-	else if (exponent >= 0)
-	{
-		int_part = significand >> (23 - exponent);
-		frac_part = (significand << (exponent + 1)) & 0xFFFFFF;
-	}
-	else /* if (exponent < 0) */
-	{
-		frac_part = (significand & 0xFFFFFF) >> (-(exponent + 1));
-	}
+    // TODO: include exponent notation (E, e) in the string.
+    if (exponent >= 31)
+    {
+        strcpy(str, "Inf");
+        return 3;
+    }
+    else if (exponent < -23)
+    {
+        strcpy(str, "0");
+        return 1;
+    }
+    else if (exponent >= 23)
+    {    // significand bits are 23+1 bits so it need to be moved to show integer parts well. And it won't have faction part.
+        int_part = significand << (exponent - 23);
+        frac_part = 0;
+    }
+    else if (exponent >= 0)
+    {
+        int_part = significand >> (23 - exponent);
+        frac_part = (significand << (exponent + 1)) & 0xFFFFFF;
+    }
+    else /* if (exponent < 0) */
+    {
+        frac_part = (significand & 0xFFFFFF) >> (-(exponent + 1));
+    }
 
-	p = str;
+    p = str;
 
-	if (input.bits.sign)
-	{
-		*p++ = '-';
-	}
-	if (int_part == 0)
-	{
-		*p++ = '0';
-	}
-	else
-	{
-		itoa_(int_part, p, 10);
-		while (*p)
-		{
-			p++;
-		}
-	}
-	*p++ = '.';
+    if (input.bits.sign)
+    {
+        *p++ = '-';
+    }
+    if (int_part == 0)
+    {
+        *p++ = '0';
+    }
+    else
+    {
+        itoa_(int_part, p, 10);
+        while (*p)
+        {
+            p++;
+        }
+    }
+    *p++ = '.';
 
-	if (frac_part == 0)
-	{
-		*p++ = '0';
-	}
-	else
-	{
-		uint8_t i;
-		// Here 5 is precision.
-		for (i = 0; i < 5; i++)
-		{
-			/* frac_part *= 10;	*/
-			frac_part = (frac_part << 3) + (frac_part << 1);
+    if (frac_part == 0)
+    {
+        *p++ = '0';
+    }
+    else
+    {
+        uint8_t i;
+        // Here 5 is precision.
+        for (i = 0; i < 5; i++)
+        {
+            /* frac_part *= 10;    */
+            frac_part = (frac_part << 3) + (frac_part << 1);
 
-			*p++ = (frac_part >> 24) + '0';
-			frac_part &= 0xFFFFFF;
-		}
-		/* delete ending zeroes */
-		for (--p; p[0] == '0' && p[-1] != '.'; --p)
-		{
-		}
-		++p;
-	}
-	*p = '\0';
+            *p++ = (frac_part >> 24) + '0';
+            frac_part &= 0xFFFFFF;
+        }
+        /* delete ending zeroes */
+        for (--p; p[0] == '0' && p[-1] != '.'; --p)
+        {
+        }
+        ++p;
+    }
+    *p = '\0';
 
-	return strlen(str);
+    return strlen(str);
 }
 

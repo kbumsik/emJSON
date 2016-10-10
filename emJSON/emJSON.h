@@ -5,10 +5,10 @@
 
 // Settings
 #ifndef EMJSON_INIT_BUF_SIZE
-	#define EMJSON_INIT_BUF_SIZE    256
+    #define EMJSON_INIT_BUF_SIZE    256
 #endif
 #ifndef EMJSON_INIT_TABLE_SIZE
-	#define EMJSON_INIT_TABLE_SIZE  4
+    #define EMJSON_INIT_TABLE_SIZE  4
 #endif
 
 #ifdef __cplusplus
@@ -49,5 +49,5 @@ int emJSON_free(json_t *obj);
 }
 #endif
 
-#endif	// __EMJSON_H__
+#endif    // __EMJSON_H__
 
