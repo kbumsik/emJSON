@@ -186,13 +186,13 @@ float json_get_float(json_t *obj, char *key)
 {
     void *result = json_get(obj, key, JSON_FLOAT);
 #ifdef __CC_ARM
-        // in uVision(keil) and mbed compiler cause hardfault when
-        // just assigned like:
-        // value = *(float *)result;
-        // the VLDR instruction causes hard fault. I don't know why.
-        // So I use memcpy() instead.
-        float value;
-        memcpy(&value, result, sizeof(4));
+    // in uVision(keil) and mbed compiler cause hardfault when
+    // just assigned like:
+    // value = *(float *)result;
+    // the VLDR instruction causes hard fault. I don't know why.
+    // So I use memcpy() instead.
+    float value;
+    memcpy(&value, result, sizeof(4));
     return value;
 #else // like __GNUC__
     return (NULL != result) ? (*(float *)result) : 0;

@@ -348,22 +348,22 @@ int json_strcpy(char *dest, json_t *obj)
         switch (entry.value_type)
         {
         case JSON_INT:
-                        itoa_(*(int *)entry.value_ptr, str_buf, 10);
+            itoa_(*(int *)entry.value_ptr, str_buf, 10);
             break;
         case JSON_FLOAT:
-                #ifdef __CC_ARM
-                // For the same problem in json_get_float();
-                // The VLDR instruction causes hard fault....
-                {
-                        float value;
-                        memcpy(&value, entry.value_ptr, sizeof(float));
-                        ftoa_(value, str_buf);
-                        break;
-                }
-                #else
-                        ftoa_(*(float *)entry.value_ptr, str_buf);
+#ifdef __CC_ARM
+        	// For the same problem in json_get_float();
+        	// The VLDR instruction causes hard fault....
+        	{
+        		float value;
+        		memcpy(&value, entry.value_ptr, sizeof(float));
+        		ftoa_(value, str_buf);
+        		break;
+        	}
+#else	// __GNUC__
+            ftoa_(*(float *)entry.value_ptr, str_buf);
             break;
-                #endif
+#endif
         case JSON_STRING:
             memset(dest + idx, '\"', 1);
             idx += 1;
@@ -407,8 +407,19 @@ int json_strlen(json_t *obj)
             str_len = itoa_(*(int *)entry.value_ptr, str_buf, 10);
             break;
         case JSON_FLOAT:
-            str_len = ftoa_(*(float *)entry.value_ptr, str_buf);
+#ifdef __CC_ARM
+        	// For the same problem in json_get_float();
+        	// The VLDR instruction causes hard fault....
+        	{
+        		float value;
+        		memcpy(&value, entry.value_ptr, sizeof(float));
+        		str_len = ftoa_(value, str_buf);
+        		break;
+        	}
+#else	// __GNUC__
+        	str_len = ftoa_(*(float *)entry.value_ptr, str_buf);
             break;
+#endif
         case JSON_STRING:
             idx += 1;    // '\"'
             str_len = strlen((char *)entry.value_ptr);

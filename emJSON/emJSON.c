@@ -45,7 +45,6 @@ int emJSON_parse(json_t *obj, char *input)
             return JSON_ERROR;
         }
     }
-    JSON_DEBUG_PRINT_OBJ(obj);
     return JSON_OK;
 }
 
@@ -96,7 +95,6 @@ int emJSON_insert(json_t *obj, char *key, void *value, json_type_t type)
             return JSON_ERROR;
         }
     }
-    JSON_DEBUG_PRINT_OBJ(obj);
     return JSON_OK;
 }
 
