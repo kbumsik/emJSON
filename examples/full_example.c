@@ -100,7 +100,7 @@ int main()
     // parsing test
     emJSON_clear(&test);
     char str_input[] = "{\"sensor1\":0.00468,\"message\":\"JSON Is Cool\",\"sensor2\":-1423}";
-    json_parse(&test, str_input);
+    emJSON_parse(&test, str_input);
     // Serialize
     printf("==JSON Serialize Test==\n");
     str = emJSON_string(&test);

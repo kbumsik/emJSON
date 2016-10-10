@@ -357,6 +357,85 @@ size_t json_buffer_size(json_t *obj)
     return buf_size_(obj);
 }
 
+
+/*******************************************************************************
+ * Debug functions
+ ******************************************************************************/
+
+void json_debug_print_obj(json_t *obj)
+{
+	JSON_DEBUG_PRINTF("==========================\n");
+	JSON_DEBUG_PRINTF("\t emJSON object block\n");
+	JSON_DEBUG_PRINTF("==========================\n");
+	JSON_DEBUG_PRINTF("Buffer size: 0x%x\n", (unsigned int)buf_size_(obj));
+	JSON_DEBUG_PRINTF("Current buffer index: 0x%x\n", (unsigned int)buf_idx_(obj));
+	JSON_DEBUG_PRINTF("Size of table : %lu\n", table_size_(obj));
+	JSON_DEBUG_PRINTF("Entry count : %lu\n", entry_count_(obj));
+	// Print pointers
+	JSON_DEBUG_PRINTF("Header Pointer : %p\n", header_ptr_(obj));
+	JSON_DEBUG_PRINTF("Size of table b0xytes: %x\n", (unsigned int)sizeof(struct header_));
+	JSON_DEBUG_PRINTF("Table Pointer : %p\n", table_ptr_(obj));
+	JSON_DEBUG_PRINTF("Size of each entry in the table: 0x%x\n", (unsigned int)sizeof(struct entry_));
+	JSON_DEBUG_PRINTF("Size of table in bytes: 0x%x\n", (unsigned int)table_byte_size_(obj));
+	JSON_DEBUG_PRINTF("Content Pointer : %p\n", content_ptr_(obj));
+	JSON_DEBUG_PRINTF("Size of Content in bytes: 0x%x\n", (unsigned int)content_byte_size_(obj));
+
+    for (int i = 0; i < (int)header_ptr_(obj)->table_size; i++)
+    {
+    	struct entry_ *entry = (table_ptr_(obj) + i);
+    	JSON_DEBUG_PRINTF("--------------------------\n");
+    	JSON_DEBUG_PRINTF("\t Entry %d\n", i);
+    	JSON_DEBUG_PRINTF("--------------------------\n");
+        if (NULL == entry->key)
+        {
+        	JSON_DEBUG_PRINTF("ENTRY IS EMPTY\n");
+            continue;
+        }
+    	JSON_DEBUG_PRINTF("Key : %s\n", entry->key);
+    	JSON_DEBUG_PRINTF("Key pointer: %p\n", (void *)entry->key);
+    	JSON_DEBUG_PRINTF("Key length: 0x%x\n", (unsigned int)strlen(entry->key));
+    	JSON_DEBUG_PRINTF("Hash : %u\n", entry->hash);
+    	JSON_DEBUG_PRINTF("Value pointer : %p\n", entry->value_ptr);
+    	JSON_DEBUG_PRINTF("Value length: 0x%x\n", entry->value_size);
+        // print type
+        switch(entry->value_type)
+        {
+        case JSON_INT:
+        	JSON_DEBUG_PRINTF("Entry type : Integer\n");
+        	JSON_DEBUG_PRINTF("Value : %d\n", *(int *)entry->value_ptr);
+        	break;
+        case JSON_FLOAT:
+        	JSON_DEBUG_PRINTF("Entry type : Floating Point\n");
+        	JSON_DEBUG_PRINTF("Value : %f\n", *(float *)entry->value_ptr);
+        	break;
+        case JSON_STRING:
+        	JSON_DEBUG_PRINTF("Entry type : String\n");
+        	JSON_DEBUG_PRINTF("Value : %s\n", (char *)entry->value_ptr);
+        	break;
+        default:
+        	JSON_DEBUG_PRINTF("UNKOWN TYPE!!!\n");
+        }
+        // print value dump
+        char dump_str[17];
+        memset(dump_str, 0, 17);
+        uint8_t *dump = (uint8_t *)entry->value_ptr;
+        for (int j = 0; j < entry->value_size; j++)
+        {
+        	sprintf(&dump_str[(2*j)%16], "%02x", (uint8_t)dump[j]);
+        	if( ((j%8 == 7)) || (j == (entry->value_size -1)) )
+        	{
+        		JSON_DEBUG_PRINTF("%s\n", dump_str);
+                memset(dump_str, 0, 17);
+        	}
+        }
+        memset(dump_str, 0, 17);
+    }
+	JSON_DEBUG_PRINTF("==========================\n");
+	JSON_DEBUG_PRINTF("\t End printing\n");
+	JSON_DEBUG_PRINTF("==========================\n");
+    return;
+}
+
 /*******************************************************************************
  * Private functions
  ******************************************************************************/
@@ -418,7 +497,7 @@ static int insert_(json_t *obj, char *key, void *value, size_t size, json_type_t
     
     // buffer size check
     size_t key_size = strlen(key) + 1;
-    size_t value_size = size + 1;
+    size_t value_size = size;
     size_t buf_required = key_size + value_size;
     if (buf_idx_(obj) + buf_required > buf_size_(obj))
     {
@@ -464,4 +543,3 @@ static int insert_(json_t *obj, char *key, void *value, size_t size, json_type_t
     entry_count_(obj) += 1;
     return JSON_OK;
 }
-

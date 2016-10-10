@@ -1,7 +1,6 @@
 #include "emJSON.h"
+#include "json_internal.h"
 #include <string.h>
-
-#define header_ptr_(obj)  ((json_header_t *)((obj)->buf))
 
 json_t emJSON_init()
 {
@@ -46,6 +45,7 @@ int emJSON_parse(json_t *obj, char *input)
             return JSON_ERROR;
         }
     }
+    JSON_DEBUG_PRINT_OBJ(obj);
     return JSON_OK;
 }
 

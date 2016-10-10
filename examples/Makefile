@@ -5,7 +5,7 @@ BIN_OBJS=$(BIN:=.o)
 # Define cimpilers
 CC=gcc
 CXX=g++
-CCFLAGS=-g -std=c99 -Wall -Wextra -Werror
+CCFLAGS=-g -std=c99 -Wall -Wextra -Werror -DDEBUG
 
 # Define path
 SRC_DIR:=../emJSON
