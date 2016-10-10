@@ -9,12 +9,13 @@
 #include "emJSON.h"
 
 // JSON object.
-char json_input[] = "{\"message\":\"This is JSON object.\"}";
+char json_input[] = "{\"message\":\"This is JSON object.\",\"time\":0.5}";
 json_t json;
 
 // init variables
 char message[128];
-int timer = 0;
+int count = 0;
+float timer;
 
 void setup() {
   // put your setup code here, to run once:
@@ -24,13 +25,15 @@ void setup() {
   // init JSON object
   json = emJSON_init();
   emJSON_parse(&json, json_input);
-  emJSON_insert_int(&json, "timer", 0);
+  emJSON_insert_int(&json, "count", 0);
 }
 
 void loop() {
-  delay(1000);
-  timer++;
-  emJSON_set_int(&json, "timer", timer);
+  delay(500);
+  timer = emJSON_get_float(&json, "time") + 0.5;
+  count = emJSON_get_int(&json, "count") + 1;
+  emJSON_set_float(&json, "time", timer);
+  emJSON_set_int(&json, "count", count);
     
   emJSON_strcpy(message, &json);
   Serial.print(message);
