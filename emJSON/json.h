@@ -13,13 +13,11 @@
 #define JSON_ENTRY_BUFFER_FULL		-6
 #define JSON_TYPE_MISMATCH			-7
 
-typedef uint8_t json_value_size_t;
-typedef uint8_t json_value_t;
-
-#define JSON_INT       1
-#define JSON_FLOAT     2
-#define JSON_STRING    3
-#define JSON_UNKNOWN   4
+typedef uint8_t json_type_t;
+	#define JSON_INT       1
+	#define JSON_FLOAT     2
+	#define JSON_STRING    3
+	#define JSON_UNKNOWN   4
     //object,
     //array,
     //boolean,
@@ -39,18 +37,17 @@ int32_t json_hash(char *str);
 
 // lower-level basic functions
 json_t json_init(void *buffer, size_t buf_size, size_t table_size);
-int json_parse(json_t *obj, char *input);
 int json_delete(json_t *obj, char *key);
 int json_clear(json_t *obj);
 
 // Insertion functions
-int json_insert(json_t *obj, char *key, char *value, json_value_t type);
+int json_insert(json_t *obj, char *key, char *value, json_type_t type);
 int json_insert_str(json_t *obj, char *key, char *value);
 int json_insert_int(json_t *obj, char *key, int32_t value);
 int json_insert_float(json_t *obj, char *key, float value);
 
 // Getter functions
-void *json_get(json_t *obj, char *key, json_value_t type);
+void *json_get(json_t *obj, char *key, json_type_t type);
 char *json_get_str(json_t *obj, char *key);
 int json_get_int(json_t *obj, char *key);
 float json_get_float(json_t *obj, char *key);
@@ -62,8 +59,9 @@ int json_set_int(json_t *obj, char *key, int value);
 int json_set_float(json_t *obj, char *key, float value);
 
 // String-related functions
+int json_parse(json_t *obj, char *input);
 int json_strcpy(char *dest, json_t *obj);
-size_t json_strlen(json_t *obj);
+int json_strlen(json_t *obj);
 
 // Buffer and memory management functions
 int json_replace_buffer(json_t *obj, void *new_buf, size_t size);
@@ -80,3 +78,4 @@ size_t json_buffer_size(json_t *obj);
 #endif
 
 #endif  // __JSON_H__
+

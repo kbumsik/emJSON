@@ -1,55 +1,13 @@
 #include "json.h"
 #include <string.h>
 #include <stdio.h>
+#include "json_internal.h"
 
 #define PERTURB_SHIFT 5
 
-typedef struct
-{
-    int32_t hash;
-    void *value_ptr;
-    char *key;
-    json_value_size_t value_size;
-    json_value_t value_type;
-}entry_t_;
-
-typedef struct
-{
-    size_t buf_size;
-    size_t buf_idx;
-    size_t table_size;
-    size_t entry_count;
-}header_t_;
-
 // Private functions
 static int get_idx_(json_t *obj, char *key);
-static int insert_(json_t *obj, char *key, void *value, size_t size, json_value_t type);
-
-// pointer macros
-#define header_ptr_(obj)  ((header_t_ *)((obj)->buf))
-#define table_ptr_(obj)  ((entry_t_ *)((obj)->buf + sizeof(header_t_)))
-#define content_ptr_(obj) ((obj)->buf + sizeof(header_t_) + _table_byte_size(obj))
-
-// pointer size functions
-#define buf_size_(obj)  (header_ptr_(obj)->buf_size)
-
-#define buf_idx_(obj)   (header_ptr_(obj)->buf_idx)
-
-#define table_size_(obj)    (header_ptr_(obj)->table_size)
-
-#define entry_count_(obj)   (header_ptr_(obj)->entry_count)
-
-
-static inline size_t _table_byte_size(json_t *obj)
-{
-    return header_ptr_(obj)->table_size * sizeof(entry_t_);
-}
-
-static inline size_t _content_byte_size(json_t *obj)
-{
-    return header_ptr_(obj)->buf_size - 
-        (sizeof(header_t_) + header_ptr_(obj)->table_size * sizeof(entry_t_));
-}
+static int insert_(json_t *obj, char *key, void *value, size_t size, json_type_t type);
 
 /*******************************************************************************
  * Core Hash function
@@ -99,7 +57,7 @@ int32_t json_hash(char *str)
 json_t json_init(void *buffer, size_t buf_size, size_t table_size)
 {
     // Check if the buffer size is enough
-    if (buf_size < (sizeof(header_t_) + table_size * sizeof(entry_t_)))
+    if (buf_size < (sizeof(struct header_) + table_size * sizeof(struct entry_)))
     {
         return (json_t){0};
     }
@@ -108,10 +66,10 @@ json_t json_init(void *buffer, size_t buf_size, size_t table_size)
     json_t new_obj = { 
         .buf = buffer
     };
-    header_t_ *header = header_ptr_(&new_obj);
-    *header = (header_t_){
+    struct header_ *header = header_ptr_(&new_obj);
+    *header = (struct header_){
         .buf_size = buf_size,
-        .buf_idx = sizeof(header_t_) + table_size * sizeof(entry_t_),
+        .buf_idx = sizeof(struct header_) + table_size * sizeof(struct entry_),
         .table_size = table_size,
         .entry_count = 0
     };
@@ -130,14 +88,14 @@ int json_delete(json_t *obj, char *key)
     json_t tmp_obj = json_copy(buf_tmp, obj);
     
     // erase selected entry in the replica and then replace it
-    memset((table_ptr_(&tmp_obj) + idx), 0, sizeof(entry_t_));
+    memset((table_ptr_(&tmp_obj) + idx), 0, sizeof(struct entry_));
 
     // Clear original table and replace it again
     json_clear(obj);
     
     for (size_t i = 0; i < header_ptr_(&tmp_obj)->table_size; i++)
     {
-        entry_t_ *entry = (table_ptr_(&tmp_obj) + i);
+    	struct entry_ *entry = (table_ptr_(&tmp_obj) + i);
         if (NULL == entry->key)
         {
             continue;
@@ -151,11 +109,11 @@ int json_delete(json_t *obj, char *key)
 int json_clear(json_t *obj)
 {
     // clear content
-    memset(content_ptr_(obj), 0, _content_byte_size(obj));
-    buf_idx_(obj) = sizeof(header_t_) + table_size_(obj) * sizeof(entry_t_);
+    memset(content_ptr_(obj), 0, content_byte_size_(obj));
+    buf_idx_(obj) = sizeof(struct header_) + table_size_(obj) * sizeof(struct entry_);
     
     // clear table
-    memset(table_ptr_(obj), 0, _table_byte_size(obj));
+    memset(table_ptr_(obj), 0, table_byte_size_(obj));
     entry_count_(obj) = 0;
     return JSON_OK;
 }
@@ -164,7 +122,7 @@ int json_clear(json_t *obj)
  * Insertion functions
  ******************************************************************************/
 
-int json_insert(json_t *obj, char *key, char *value, json_value_t type)
+int json_insert(json_t *obj, char *key, char *value, json_type_t type)
 {
     switch (type)
     {
@@ -206,12 +164,12 @@ int json_insert_str(json_t *obj, char *key, char *value)
  * Getter functions
  ******************************************************************************/
 
-void *json_get(json_t *obj, char *key, json_value_t type)
+void *json_get(json_t *obj, char *key, json_type_t type)
 {
     int idx = get_idx_(obj, key);
     if (idx >= 0)
     {
-    	json_value_t target_type = table_ptr_(obj)[idx].value_type;
+    	json_type_t target_type = table_ptr_(obj)[idx].value_type;
         return (target_type == type)? table_ptr_(obj)[idx].value_ptr : NULL;
     }
     return NULL;
@@ -226,7 +184,7 @@ int json_get_int(json_t *obj, char *key)
 float json_get_float(json_t *obj, char *key)
 {
     void *result = json_get(obj, key, JSON_FLOAT);
-    return (NULL != result) ? *(float *)result : 0.0;
+    return (NULL != result) ? *(float *)result : (float)0.0;
 }
 
 char *json_get_str(json_t *obj, char *key)
@@ -243,7 +201,7 @@ int json_set(json_t *obj, char *key, void *value)
     int idx = get_idx_(obj, key);
     if (idx >= 0)
     {
-        entry_t_ *entry = table_ptr_(obj) + idx;
+    	struct entry_ *entry = table_ptr_(obj) + idx;
         memcpy(entry->value_ptr, value, entry->value_size);
         return JSON_OK;
     }
@@ -261,7 +219,7 @@ int json_set_str(json_t *obj, char *key, char *value)
     int idx = get_idx_(obj, key);
     if (idx >= 0)
     {
-        entry_t_ *entry = table_ptr_(obj) + idx;
+    	struct entry_ *entry = table_ptr_(obj) + idx;
         if (size > entry->value_size)
         {
             return JSON_ENTRY_BUFFER_FULL;
@@ -290,12 +248,11 @@ int json_replace_buffer(json_t *obj, void *new_buf, size_t size)
 {
     void *old_buf = obj->buf;
     // Because in some system the offset is beyond signed int
-    // TODO: check if long int is always 32 bit in 32 bit system and 64 bit in 64 bit system
     char is_plus = ((new_buf - old_buf) > 0)? 1: 0;
     size_t offset = (is_plus)?(new_buf - old_buf):(old_buf - new_buf);
     for (size_t i = 0; i < table_size_(obj); i++)
     {
-        entry_t_ *entry = (table_ptr_(obj) + i);
+    	struct entry_ *entry = (table_ptr_(obj) + i);
         if (NULL == entry->key)
         {
             continue;
@@ -327,7 +284,7 @@ int json_replace_buffer(json_t *obj, void *new_buf, size_t size)
 int json_double_table(json_t *obj)
 {
     // Check if the buffer is big enough
-    if (buf_size_(obj) - buf_idx_(obj) < _table_byte_size(obj))
+    if (buf_size_(obj) - buf_idx_(obj) < table_byte_size_(obj))
     {
         return JSON_BUFFER_FULL;
     }
@@ -337,7 +294,7 @@ int json_double_table(json_t *obj)
     
     for (size_t i = 0; i < table_size_(obj); i++)
     {
-        entry_t_ *entry = (table_ptr_(obj) + i);
+    	struct entry_ *entry = (table_ptr_(obj) + i);
         if (NULL == entry->key)
         {
             continue;
@@ -355,7 +312,6 @@ int json_double_table(json_t *obj)
 json_t json_copy(void *dest_buf, json_t *obj)
 {
     // Because in some system the offset is beyond signed int
-    // TODO: check if long int is always 32 bit in 32 bit system and 64 bit in 64 bit system
     char is_plus = ((dest_buf - obj->buf) > 0)? 1: 0;
     size_t offset = (is_plus)?(dest_buf - obj->buf):(obj->buf - dest_buf);
     memcpy(dest_buf, obj->buf, buf_size_(obj));
@@ -409,7 +365,7 @@ static int get_idx_(json_t *obj, char *key)
 {
     int32_t hash = json_hash(key);
     size_t idx = hash & (table_size_(obj) - 1);
-    entry_t_ entry;
+    struct entry_ entry;
     
     // variables for open addressing
     int perturb = hash;
@@ -453,7 +409,7 @@ end_error:
 }
 
 
-static int insert_(json_t *obj, char *key, void *value, size_t size, json_value_t type)
+static int insert_(json_t *obj, char *key, void *value, size_t size, json_type_t type)
 {
     if (entry_count_(obj) >= table_size_(obj))
     {
@@ -470,7 +426,7 @@ static int insert_(json_t *obj, char *key, void *value, size_t size, json_value_
     }
     
     // construct entry object first, with hash.
-    entry_t_ new_entry = {0};
+    struct entry_ new_entry = {0};
     new_entry.hash = json_hash(key);
     
     // put into the table
@@ -509,20 +465,3 @@ static int insert_(json_t *obj, char *key, void *value, size_t size, json_value_
     return JSON_OK;
 }
 
-/**
- * Undefine macros
- */
-
-// pointer macros
-#undef  header_ptr_
-#undef table_ptr_
-#undef content_ptr_
-
-// pointer size functions
-#undef buf_size_
-
-#undef buf_idx_
-
-#undef table_size_
-
-#undef entry_count_

@@ -16,19 +16,19 @@ extern "C"{
 #endif
 
 // high-level functions
-json_t emJSON_init();
+json_t emJSON_init(void);
 int emJSON_parse(json_t *obj, char *input);
 int emJSON_delete(json_t *obj, char *key);
 int emJSON_clear(json_t *obj);
 
 // Insertion functions
-int emJSON_insert(json_t *obj, char *key, void *value, json_value_t type);
+int emJSON_insert(json_t *obj, char *key, void *value, json_type_t type);
 int emJSON_insert_str(json_t *obj, char *key, char *value);
 int emJSON_insert_int(json_t *obj, char *key, int value);
 int emJSON_insert_float(json_t *obj, char *key, float value);
 
 // Getter functions
-void *emJSON_get(json_t *obj, char *key, json_value_t type);
+void *emJSON_get(json_t *obj, char *key, json_type_t type);
 char *emJSON_get_str(json_t *obj, char *key);
 int emJSON_get_int(json_t *obj, char *key);
 float emJSON_get_float(json_t *obj, char *key);
@@ -50,3 +50,4 @@ int emJSON_free(json_t *obj);
 #endif
 
 #endif	// __EMJSON_H__
+
