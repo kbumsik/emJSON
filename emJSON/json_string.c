@@ -25,8 +25,11 @@ static inline int is_digit_(char input);
  */
 struct atox_ret_
 {
-    int value_int;
-    float value_float;
+	union
+	{
+	    float f;
+		int i;
+	} value;
     uint8_t str_len;
 };
 
@@ -325,7 +328,6 @@ static struct parser_result_ check_number_(char *input)
 
 int json_strcpy(char *dest, json_t *obj)
 {
-    char str_buf[30];   // FIXME: Take more string length
     int idx = 0;
     memset(dest + idx, '{', 1);
     idx += 1;
@@ -348,7 +350,7 @@ int json_strcpy(char *dest, json_t *obj)
         switch (entry.value_type)
         {
         case JSON_INT:
-            itoa_(*(int *)entry.value_ptr, str_buf, 10);
+        	str_len = itoa_(*(int *)entry.value_ptr, dest + idx, 10);
             break;
         case JSON_FLOAT:
 #ifdef __CC_ARM
@@ -357,30 +359,37 @@ int json_strcpy(char *dest, json_t *obj)
         	{
         		float value;
         		memcpy(&value, entry.value_ptr, sizeof(float));
-        		ftoa_(value, str_buf);
+        		ftoa_(value, dest + idx);
         		break;
         	}
 #else	// __GNUC__
-            ftoa_(*(float *)entry.value_ptr, str_buf);
+        	str_len = ftoa_(*(float *)entry.value_ptr, dest + idx);
             break;
 #endif
         case JSON_STRING:
             memset(dest + idx, '\"', 1);
             idx += 1;
-            strcpy(str_buf, (char *)entry.value_ptr);
+            strcpy(dest + idx, (char *)entry.value_ptr);
+            str_len = strlen(dest + idx);
             break;
+        case JSON_OBJECT:
+        	{
+        		json_t tmp = {
+        				.buf = entry.value_ptr
+        		};
+        		str_len = json_strcpy(dest + idx, &tmp);
+        	}
+        	break;
         default:
             return JSON_ERROR;
         }
-        str_len = strlen(str_buf);
-        strcpy(dest + idx, str_buf);
         strcpy(dest + idx + str_len, (JSON_STRING == entry.value_type) ? "\"," : ",");
         idx += str_len + ((JSON_STRING == entry.value_type)? 2 : 1);
     }
     // it's the end
     // -1 is to remove the last ','.
     strcpy(dest + idx -1, "}");
-    return JSON_OK;
+    return idx;
 }
 
 int json_strlen(json_t *obj)
@@ -424,6 +433,14 @@ int json_strlen(json_t *obj)
             idx += 1;    // '\"'
             str_len = strlen((char *)entry.value_ptr);
             break;
+        case JSON_OBJECT:
+        	{
+        		json_t tmp = {
+        				.buf = entry.value_ptr
+        		};
+        		str_len = json_strlen(&tmp);
+        	}
+        	break;
         default:
             return JSON_ERROR;
         }
@@ -451,10 +468,10 @@ static int insert_(json_t *obj, struct parser_result_ *key, struct parser_result
         input_ptr = value->i;
         break;
     case JSON_INT:
-        input = atoi_(value->i).value_int;
+        input = atoi_(value->i).value.i;
         break;
     case JSON_FLOAT:
-        input_f = atof_(value->i).value_float;
+        input_f = atof_(value->i).value.f;
         input_ptr = &input_f;
         break;
     default:
@@ -516,7 +533,7 @@ struct atox_ret_ atoi_(const char *str)
         ret_int = ret_int * 10 + (*str - '0');
     }
     ret = (struct atox_ret_){
-        .value_int = ret_int * sign,
+        .value.i = ret_int * sign,
         .str_len = len
     };
     return ret;
@@ -545,7 +562,7 @@ struct atox_ret_ atof_(const char *str)
         len += 1;
     }
     tmp = atoi_(str);
-    int_part = tmp.value_int;
+    int_part = tmp.value.i;
 
     str += tmp.str_len;
     len += tmp.str_len;
@@ -555,7 +572,7 @@ struct atox_ret_ atof_(const char *str)
     {
         str += 1;
         tmp = atoi_(str);
-        frac_part = (float) tmp.value_int;
+        frac_part = (float) tmp.value.i;
         frac_len = tmp.str_len;
 
         str += tmp.str_len;
@@ -568,14 +585,14 @@ struct atox_ret_ atof_(const char *str)
     {
         str += 1;
         tmp = atoi_(str);
-        expo_part = tmp.value_int;
+        expo_part = tmp.value.i;
 
         str += tmp.str_len;
         len += tmp.str_len + 1;
     }
 
     // put them together
-    ret.value_float = (float) int_part;
+    ret.value.f = (float) int_part;
     if (frac_len > 0)
     {
         // add fraction
@@ -585,15 +602,15 @@ struct atox_ret_ atof_(const char *str)
             frac_divisor *= 10;
         }
         frac_part /= frac_divisor;
-        if (ret.value_float < 0)
+        if (ret.value.f < 0)
         {
-            ret.value_float *= -1;
-            ret.value_float += frac_part;
-            ret.value_float *= -1;
+            ret.value.f *= -1;
+            ret.value.f += frac_part;
+            ret.value.f *= -1;
         }
         else
         {
-            ret.value_float += frac_part;
+            ret.value.f += frac_part;
         }
     }
 
@@ -613,17 +630,17 @@ struct atox_ret_ atof_(const char *str)
         }
         if (expo_signed)
         {
-            ret.value_float *= expo_multiplier;
+            ret.value.f *= expo_multiplier;
         }
         else
         {
-            ret.value_float /= expo_multiplier;
+            ret.value.f /= expo_multiplier;
         }
     }
 
     if (!is_plus)
     {
-        ret.value_float *= -1;
+        ret.value.f *= -1;
     }
     // done
     ret.str_len = len;
