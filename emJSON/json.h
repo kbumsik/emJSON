@@ -14,14 +14,14 @@
 #define JSON_TYPE_MISMATCH			-7
 
 typedef uint8_t json_type_t;
-	#define JSON_INT       1
-	#define JSON_FLOAT     2
-	#define JSON_STRING    3
-	#define JSON_UNKNOWN   4
-    //object,
-    //array,
-    //boolean,
-    //null_value
+	#define JSON_INT		1
+	#define JSON_FLOAT		2
+	#define JSON_STRING		3
+	#define JSON_OBJECT		4
+	//#define JSON_ARRAY	5
+	//#define JSON_NULL		6
+	//#define JSON_BOOL		7
+	#define JSON_UNKNOWN	8
 
 typedef struct
 {
@@ -41,16 +41,18 @@ int json_delete(json_t *obj, char *key);
 int json_clear(json_t *obj);
 
 // Insertion functions
-int json_insert(json_t *obj, char *key, char *value, json_type_t type);
+int json_insert(json_t *obj, char *key, void *value, json_type_t type);
 int json_insert_str(json_t *obj, char *key, char *value);
 int json_insert_int(json_t *obj, char *key, int32_t value);
 int json_insert_float(json_t *obj, char *key, float value);
+int json_insert_obj(json_t *obj, char *key, json_t *input);
 
 // Getter functions
 void *json_get(json_t *obj, char *key, json_type_t type);
 char *json_get_str(json_t *obj, char *key);
 int json_get_int(json_t *obj, char *key);
 float json_get_float(json_t *obj, char *key);
+json_t json_get_obj(json_t *obj, char *key);
 
 // Setter functions
 int json_set(json_t *obj, char *key, void *value);
@@ -72,6 +74,24 @@ json_t json_copy(void *dest_buf, json_t *obj);
 size_t json_table_size(json_t *obj);
 size_t json_count(json_t *obj);
 size_t json_buffer_size(json_t *obj);
+
+
+// Debugging Support
+#ifdef DEBUG
+    #include <stdio.h>
+	void json_debug_print_obj(json_t *obj);
+	#define JSON_DEBUG_PRINT_OBJ(obj)       json_debug_print_obj(obj)
+
+	#if defined(ARDUINO_PLATFORM) || defined(ARDUINO)
+		#define JSON_DEBUG_PRINTF(msg, ...)     printf("EMJSON-DEBUG: " msg, ##__VA_ARGS__)
+	#else
+		#define JSON_DEBUG_PRINTF(msg, ...)     printf("EMJSON-DEBUG: " msg, ##__VA_ARGS__)
+	#endif
+#else
+	#define JSON_DEBUG_PRINT_OBJ(obj)
+    #define JSON_DEBUG_PRINTF(msg, ...)
+#endif
+
 
 #ifdef __cplusplus
 }

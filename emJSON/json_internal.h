@@ -13,12 +13,13 @@ struct entry_
     int32_t hash;
     void *value_ptr;
     char *key;
-    uint8_t value_size;
+    size_t value_size;
     json_type_t value_type;
 };
 
 struct header_
 {
+	void *parent;
     size_t buf_size;
     size_t buf_idx;
     size_t table_size;
@@ -28,6 +29,7 @@ struct header_
 
 // pointer macros
 #define header_ptr_(obj)  ((struct header_ *)((obj)->buf))
+#define parent_ptr_(obj)  (header_ptr_(obj)->parent)
 #define table_ptr_(obj)  ((struct entry_ *)((obj)->buf + sizeof(struct header_)))
 #define content_ptr_(obj) ((obj)->buf + sizeof(struct header_) + table_byte_size_(obj))
 
@@ -50,19 +52,6 @@ static inline size_t content_byte_size_(json_t *obj)
     return header_ptr_(obj)->buf_size -
         (sizeof(struct header_) + header_ptr_(obj)->table_size * sizeof(struct entry_));
 }
-
-// Debugging settings
-
-#ifdef DEBUG
-    #include <stdio.h>
-    #define JSON_DEBUG_PRINTF(msg, ...)     printf("EMJSON-DEBUG: " msg, ##__VA_ARGS__)
-    #define JSON_DEBUG_PRINT_OBJ(obj)       json_debug_print_obj(obj)
-#else
-    #define JSON_DEBUG_PRINTF(msg, ...)
-    #define JSON_DEBUG_PRINT_OBJ(obj)
-#endif
-
-void json_debug_print_obj(json_t *obj);
 
 
 #endif /* JSON_INTERNAL_H_ */
