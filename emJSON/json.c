@@ -182,8 +182,28 @@ int json_insert_obj(json_t *obj, char *key, json_t *input)
 	table_move_ptr_ (table_ptr_(obj)[ret.idx].value_ptr, input->buf, input);
 
 	// change input object and set parent
+	// FIXME: make the following line shorter
+	((struct header_ *)(table_ptr_(obj)[ret.idx].value_ptr))->parent_entry_idx = ret.idx;
 	input->buf = table_ptr_(obj)[ret.idx].value_ptr;
 	parent_ptr_(input) = obj->buf;
+	return ret.status;
+}
+
+
+int json_insert_empty_obj(json_t *obj, char *key, size_t size)
+{
+	// insert
+	struct result_ ret = insert_(obj, key, NULL, size, JSON_NULL);
+	if (ret.status != JSON_OK)
+	{
+		return ret.status;
+	}
+	// get object and init
+	json_t tmp = json_init(table_ptr_(obj)[ret.idx].value_ptr, size, 4);
+	parent_ptr_(&tmp) = obj->buf;
+	table_ptr_(obj)[ret.idx].value_type = JSON_OBJECT;
+	((struct header_ *)(table_ptr_(obj)[ret.idx].value_ptr))->parent_entry_idx = ret.idx;
+	// TODO: what if the buffer is not enough?
 	return ret.status;
 }
 
@@ -197,7 +217,7 @@ void *json_get(json_t *obj, char *key, json_type_t type)
     if (idx >= 0)
     {
     	json_type_t target_type = table_ptr_(obj)[idx].value_type;
-        return (target_type == type)? table_ptr_(obj)[idx].value_ptr : NULL;
+        return (target_type == type && target_type != JSON_NULL)? table_ptr_(obj)[idx].value_ptr : NULL;
     }
     return NULL;
 }
@@ -386,6 +406,7 @@ void json_debug_print_obj(json_t *obj)
     JSON_DEBUG_PRINTF("\t emJSON object block\n");
     JSON_DEBUG_PRINTF("==========================\n");
     JSON_DEBUG_PRINTF("Parent: %p\n", parent_ptr_(obj));
+    JSON_DEBUG_PRINTF("Table index in Parent: %u\n", (unsigned int)idx_in_parent_(obj));
     JSON_DEBUG_PRINTF("Buffer size: 0x%x\n", (unsigned int)buf_size_(obj));
     JSON_DEBUG_PRINTF("Current buffer index: 0x%x\n", (unsigned int)buf_idx_(obj));
     JSON_DEBUG_PRINTF("Size of table : %lu\n", table_size_(obj));
@@ -444,10 +465,24 @@ void json_debug_print_obj(json_t *obj)
         default:
             JSON_DEBUG_PRINTF("UNKOWN TYPE!!!\n");
         }
-        // print value dump
+        // print dump
         char dump_str[17];
         memset(dump_str, 0, 17);
-        uint8_t *dump = (uint8_t *)entry->value_ptr;
+        // key dump
+        JSON_DEBUG_PRINTF("Key dump\n");
+        uint8_t *dump = (uint8_t *)entry->key;
+        for (size_t j = 0; j < strlen(entry->key)+1; j++)
+        {
+            sprintf(&dump_str[(2*j)%16], "%02x", (uint8_t)dump[j]);
+            if( ((j%8 == 7)) || (j == (strlen(entry->key))) )
+            {
+                JSON_DEBUG_PRINTF("%s\n", dump_str);
+                memset(dump_str, 0, 17);
+            }
+        }
+        // value dump
+        JSON_DEBUG_PRINTF("Value dump\n");
+        dump = (uint8_t *)entry->value_ptr;
         for (size_t j = 0; j < entry->value_size; j++)
         {
             sprintf(&dump_str[(2*j)%16], "%02x", (uint8_t)dump[j]);
@@ -569,12 +604,15 @@ static struct result_ insert_(json_t *obj, char *key, void *value, size_t size, 
     
     // put value into the buffer
     void *value_ptr = obj->buf + buf_idx_(obj);
-    memcpy(value_ptr, value, size);
+    if (NULL != value)
+    {
+        memcpy(value_ptr, value, size);
+    }
     new_entry.value_ptr = value_ptr;
     buf_idx_(obj) += value_size;
     
     // Put the new entry
-    new_entry.value_type = type;
+    new_entry.value_type = (NULL != value)?type:JSON_NULL;
     new_entry.value_size = value_size;
     table_ptr_(obj)[new_idx] = new_entry;
     

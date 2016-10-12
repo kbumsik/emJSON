@@ -95,6 +95,7 @@ int main()
     printf("%d\n", (int)json_strlen(&test));
     printf("%d\n", (int)strlen(str));
     printf("%s\n", str);
+	fflush(stdout);
     free(str);
 
     // parsing test
@@ -107,17 +108,18 @@ int main()
     printf("%d\n", (int)json_strlen(&test));
     printf("%d\n", (int)strlen(str));
     printf("%s\n", str);
+	fflush(stdout);
     free(str);
 
     // Child object test
 	char str_input2[] = "{\"sensor1\":0.045600,\"message\":\"JSON Is Cool\",\"sensor2\":142}";
-	char buffer2[512];
-	json_t test2 = json_init(buffer2, 512, 4);  // 4 is table size, this MUST be power of 2.
+	char buffer2[1048];
+	json_t test2 = json_init(buffer2, 1028, 4);  // 4 is table size, this MUST be power of 2.
 	json_parse(&test2, str_input2);
 
 	char str_input3[] = "{\"message\":\"JSON Child Ojbect\",\"sensor3\":0.562}";
-	char buffer3[256];
-	json_t test3 = json_init(buffer3, 256, 4);  // 4 is table size, this MUST be power of 2.
+	char buffer3[200];
+	json_t test3 = json_init(buffer3, 200, 2);  // 4 is table size, this MUST be power of 2.
 	json_parse(&test3, str_input3);
 
 	json_insert_obj(&test2, "Child", &test3);
@@ -133,6 +135,23 @@ int main()
     printf("%d\n", (int)json_strlen(&test2));
     printf("%d\n", (int)strlen(str));
     printf("%s\n", str);
+	fflush(stdout);
+    free(str);
+
+    // parse JSON with child object
+    char str_input4[] = "{\"sensor1\":0.04559,\"message\":\"JSON Is Cool\",\"Child\":{\"message\":\"JSON Child Ojbect\",\"sensor3\":0.56199},\"sensor2\":142}";
+    json_clear(&test2);
+    json_parse(&test2, str_input4);
+
+	json_debug_print_obj(&test2);
+	fflush(stdout);
+    // Serialize
+    printf("==JSON Serialize Test==\n");
+    str = emJSON_string(&test2);
+    printf("%d\n", (int)json_strlen(&test2));
+    printf("%d\n", (int)strlen(str));
+    printf("%s\n", str);
+	fflush(stdout);
     free(str);
 
 	// Finished

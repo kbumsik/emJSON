@@ -20,6 +20,7 @@ struct entry_
 struct header_
 {
 	void *parent;
+	size_t parent_entry_idx;	// FIXME: deal with it.
     size_t buf_size;
     size_t buf_idx;
     size_t table_size;
@@ -33,7 +34,10 @@ struct header_
 #define table_ptr_(obj)  ((struct entry_ *)((obj)->buf + sizeof(struct header_)))
 #define content_ptr_(obj) ((obj)->buf + sizeof(struct header_) + table_byte_size_(obj))
 
-// pointer size functions
+
+// pointer,size, and index functions
+#define idx_in_parent_(obj)  (header_ptr_(obj)->parent_entry_idx)
+
 #define buf_size_(obj)  (header_ptr_(obj)->buf_size)
 
 #define buf_idx_(obj)   (header_ptr_(obj)->buf_idx)
