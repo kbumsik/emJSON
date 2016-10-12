@@ -141,14 +141,19 @@ int json_parse(json_t *obj, char *input)
             {
                 result_value = check_number_(i);
             }
+            else if (*i == '{')
+            {
+            	result_value.i = i;
+            	result_value.result_type = JSON_OBJECT;
+            }
             else
             {
                 return JSON_ERROR;
             }
-            // update i
-            i = result_value.j;
             // put them into the object
             ret = insert_(obj, &result_name, &result_value);
+            // update i
+            i = result_value.j;
             if (JSON_OK != ret)
             {
                 return ret;
@@ -183,7 +188,9 @@ int json_parse(json_t *obj, char *input)
             return JSON_ERROR;
         }
     }
-    return JSON_OK;
+    // skip '}'
+    i += 1;
+    return (i - input);
 }
 
 static struct parser_result_ check_string_(char *input)
@@ -380,6 +387,10 @@ int json_strcpy(char *dest, json_t *obj)
         		str_len = json_strcpy(dest + idx, &tmp);
         	}
         	break;
+        case JSON_NULL:
+            strcpy(dest + idx, "null");
+            str_len = 4;
+        	break;
         default:
             return JSON_ERROR;
         }
@@ -441,6 +452,9 @@ int json_strlen(json_t *obj)
         		str_len = json_strlen(&tmp);
         	}
         	break;
+        case JSON_NULL:
+        	str_len = 4; // "null"
+        	break;
         default:
             return JSON_ERROR;
         }
@@ -457,30 +471,73 @@ static int insert_(json_t *obj, struct parser_result_ *key, struct parser_result
     char name_end = *key->j;
     char value_end = *value->j;
     *key->j = '\0';
-    *value->j = '\0';
+    if (JSON_OBJECT != value->result_type)
+    {
+        *value->j = '\0';
+    }
     // convert value.
-    int32_t input = 0;
-    float input_f = 0.0;
-    void *input_ptr = &input;
+    union {
+    	int32_t i;
+    	float f;
+    	char *str;
+    	json_t obj;
+    } input;
+    int ret;
     switch (value->result_type)
     {
     case JSON_STRING:
-        input_ptr = value->i;
+        input.str = value->i;
+        ret = json_insert(obj, key->i, input.str, value->result_type);
         break;
     case JSON_INT:
-        input = atoi_(value->i).value.i;
+        input.i = atoi_(value->i).value.i;
+        ret = json_insert(obj, key->i, &input.i, value->result_type);
         break;
     case JSON_FLOAT:
-        input_f = atof_(value->i).value.f;
-        input_ptr = &input_f;
+        input.f = atof_(value->i).value.f;
+        ret = json_insert(obj, key->i, &input.f, value->result_type);
+        break;
+    case JSON_OBJECT:
+    	// FIXME: Find a better way
+    	/*
+    	 * Object insertion strategy:
+    	 * 1. Create a temporary object that takes over the rest of buffer.
+    	 * 2. Then insert.
+    	 * 3. Finally trim the buffer size of the child and move the index back.
+    	 */
+    	// Make NULL type insertion first?
+    	// what about inserting null object?
+        ret = json_insert_empty_obj(obj, key->i, buf_size_(obj)-(buf_idx_(obj)+strlen(key->i)+1));
+        input.obj = json_get_obj(obj, key->i);
+        if (NULL == input.obj.buf)
+        {
+        	return JSON_BUFFER_FULL;
+        }
+        value->j = value->i;
+        value->j += json_parse(&input.obj, value->i);
+        if (value->j < value->i)
+        {
+        	return (value->j < value->i); // convert into an error code.
+        }
+        // finally trim down the buffer
+        {
+        	size_t offset = buf_size_(&input.obj) - buf_idx_(&input.obj);
+        	buf_size_(&input.obj) -= offset;
+        	buf_idx_(obj) -= offset;
+        	struct entry_ *tmp_entry = table_ptr_(obj) + idx_in_parent_(&input.obj);
+        	tmp_entry->value_size -= offset;
+        }
         break;
     default:
         return JSON_ERROR;
     }
-    int ret = json_insert(obj, key->i, input_ptr, value->result_type);
     // restore charters
     *key->j = name_end;
-    *value->j = value_end;
+
+    if (JSON_OBJECT != value->result_type)
+    {
+        *value->j = value_end;
+    }
     return ret;
 }
 

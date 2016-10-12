@@ -19,7 +19,7 @@ typedef uint8_t json_type_t;
 	#define JSON_STRING		3
 	#define JSON_OBJECT		4
 	//#define JSON_ARRAY	5
-	//#define JSON_NULL		6
+	#define JSON_NULL		6
 	//#define JSON_BOOL		7
 	#define JSON_UNKNOWN	8
 
@@ -46,12 +46,13 @@ int json_insert_str(json_t *obj, char *key, char *value);
 int json_insert_int(json_t *obj, char *key, int32_t value);
 int json_insert_float(json_t *obj, char *key, float value);
 int json_insert_obj(json_t *obj, char *key, json_t *input);
+int json_insert_empty_obj(json_t *obj, char *key, size_t size);	// make it internal?
 
 // Getter functions
-void *json_get(json_t *obj, char *key, json_type_t type);
-char *json_get_str(json_t *obj, char *key);
-int json_get_int(json_t *obj, char *key);
-float json_get_float(json_t *obj, char *key);
+void  *json_get(json_t *obj, char *key, json_type_t type);
+char  *json_get_str(json_t *obj, char *key);
+int	   json_get_int(json_t *obj, char *key);
+float  json_get_float(json_t *obj, char *key);
 json_t json_get_obj(json_t *obj, char *key);
 
 // Setter functions
