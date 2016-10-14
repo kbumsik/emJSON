@@ -341,23 +341,23 @@ int json_strcpy(char *dest, json_t *obj)
     // start
     for (size_t i = 0; i < table_size_(obj); i++)
     {
-        struct entry_ entry = table_ptr_(obj)[i];
-        if (NULL == entry.key)
+        struct entry_ *entry = table_ptr_(obj) + i;
+        if (NULL == entry->key)
         {    // empty entry
             continue;
         }
         // copy key: "<key>":
         memset(dest + idx, '\"', 1);
         idx += 1;
-        int str_len = strlen(entry.key);
-        strcpy(dest + idx, entry.key);
+        int str_len = strlen(entry->key);
+        strcpy(dest + idx, entry->key);
         strcpy(dest + idx + str_len, "\":");
         idx += str_len + 2;
         // copy value: "<value>",
-        switch (entry.value_type)
+        switch (entry->value_type)
         {
         case JSON_INT:
-        	str_len = itoa_(*(int *)entry.value_ptr, dest + idx, 10);
+        	str_len = itoa_(*(int *)entry->value_ptr, dest + idx, 10);
             break;
         case JSON_FLOAT:
 #ifdef __CC_ARM
@@ -365,24 +365,24 @@ int json_strcpy(char *dest, json_t *obj)
         	// The VLDR instruction causes hard fault....
         	{
         		float value;
-        		memcpy(&value, entry.value_ptr, sizeof(float));
+        		memcpy(&value, entry->value_ptr, sizeof(float));
         		ftoa_(value, dest + idx);
         		break;
         	}
 #else	// __GNUC__
-        	str_len = ftoa_(*(float *)entry.value_ptr, dest + idx);
+        	str_len = ftoa_(*(float *)entry->value_ptr, dest + idx);
             break;
 #endif
         case JSON_STRING:
             memset(dest + idx, '\"', 1);
             idx += 1;
-            strcpy(dest + idx, (char *)entry.value_ptr);
+            strcpy(dest + idx, (char *)entry->value_ptr);
             str_len = strlen(dest + idx);
             break;
         case JSON_OBJECT:
         	{
         		json_t tmp = {
-        				.buf = entry.value_ptr
+        				.buf = entry->value_ptr
         		};
         		str_len = json_strcpy(dest + idx, &tmp);
         	}
@@ -394,8 +394,8 @@ int json_strcpy(char *dest, json_t *obj)
         default:
             return JSON_ERROR;
         }
-        strcpy(dest + idx + str_len, (JSON_STRING == entry.value_type) ? "\"," : ",");
-        idx += str_len + ((JSON_STRING == entry.value_type)? 2 : 1);
+        strcpy(dest + idx + str_len, (JSON_STRING == entry->value_type) ? "\"," : ",");
+        idx += str_len + ((JSON_STRING == entry->value_type)? 2 : 1);
     }
     // it's the end
     // -1 is to remove the last ','.
@@ -411,20 +411,20 @@ int json_strlen(json_t *obj)
     // start
     for (size_t i = 0; i < table_size_(obj); i++)
     {
-        struct entry_ entry = table_ptr_(obj)[i];
-        if (NULL == entry.key)
+        struct entry_ *entry = table_ptr_(obj) + i;
+        if (NULL == entry->key)
         {    // empty entry
             continue;
         }
         // "<key>":
         idx += 1; // '\"'
-        int str_len = strlen(entry.key);
+        int str_len = strlen(entry->key);
         idx += str_len + 2;    // <key>":
         // "<value>",
-        switch (entry.value_type)
+        switch (entry->value_type)
         {
         case JSON_INT:
-            str_len = itoa_(*(int *)entry.value_ptr, str_buf, 10);
+            str_len = itoa_(*(int *)entry->value_ptr, str_buf, 10);
             break;
         case JSON_FLOAT:
 #ifdef __CC_ARM
@@ -432,22 +432,22 @@ int json_strlen(json_t *obj)
         	// The VLDR instruction causes hard fault....
         	{
         		float value;
-        		memcpy(&value, entry.value_ptr, sizeof(float));
+        		memcpy(&value, entry->value_ptr, sizeof(float));
         		str_len = ftoa_(value, str_buf);
         		break;
         	}
 #else	// __GNUC__
-        	str_len = ftoa_(*(float *)entry.value_ptr, str_buf);
+        	str_len = ftoa_(*(float *)entry->value_ptr, str_buf);
             break;
 #endif
         case JSON_STRING:
             idx += 1;    // '\"'
-            str_len = strlen((char *)entry.value_ptr);
+            str_len = strlen((char *)entry->value_ptr);
             break;
         case JSON_OBJECT:
         	{
         		json_t tmp = {
-        				.buf = entry.value_ptr
+        				.buf = entry->value_ptr
         		};
         		str_len = json_strlen(&tmp);
         	}
@@ -458,7 +458,7 @@ int json_strlen(json_t *obj)
         default:
             return JSON_ERROR;
         }
-        idx += str_len + ((JSON_STRING == entry.value_type) ? 2 : 1); // <value>",
+        idx += str_len + ((JSON_STRING == entry->value_type) ? 2 : 1); // <value>",
     }
     // it's the end, '}'
     // consider removing the last ','.

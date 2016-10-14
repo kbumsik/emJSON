@@ -614,7 +614,9 @@ static struct result_ insert_(json_t *obj, char *key, void *value, size_t size, 
     // Put the new entry
     new_entry.value_type = (NULL != value)?type:JSON_NULL;
     new_entry.value_size = value_size;
-    table_ptr_(obj)[new_idx] = new_entry;
+    // FIXME: check this.
+    memcpy(table_ptr_(obj) + new_idx, &new_entry, sizeof(struct entry_));
+    // table_ptr_(obj)[new_idx] = new_entry;
     
     entry_count_(obj) += 1;
 
