@@ -51,12 +51,13 @@ void emJSON_example(void)
 	// {"sensor1":0.045600,"intInput":999,"message":"JSON Is Cool","sensor2":142}
 
 	free(str);
-	// emJSON.h objects needs to be freed after used instead.
-	emJSON_free(&test);
 
 	printf("%f\n", sensor1);
 	printf("%d\n", sensor2);
 	printf("%s\n", message);
+
+	// emJSON.h objects needs to be freed after used instead.
+	emJSON_free(&test);
 }
 
 int main()

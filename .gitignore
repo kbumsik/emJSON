@@ -1,6 +1,7 @@
 ## Specific to this project
 *.md.html
 *.exe
+*.stackdump
 
 ## Eclipse CDT
 .metadata/
