@@ -8,8 +8,7 @@
 #ifndef JSON_INTERNAL_H_
 #define JSON_INTERNAL_H_
 
-struct entry_
-{
+struct _entry {
     int32_t hash;
     void *value_ptr;
     char *key;
@@ -17,8 +16,7 @@ struct entry_
     json_type_t value_type;
 };
 
-struct header_
-{
+struct _header {
 	void *parent;
 	size_t parent_entry_idx;	// FIXME: deal with it.
     size_t buf_size;
@@ -29,32 +27,32 @@ struct header_
 
 
 // pointer macros
-#define header_ptr_(obj)  ((struct header_ *)((obj)->buf))
-#define parent_ptr_(obj)  (header_ptr_(obj)->parent)
-#define table_ptr_(obj)  ((struct entry_ *)((obj)->buf + sizeof(struct header_)))
-#define content_ptr_(obj) ((obj)->buf + sizeof(struct header_) + table_byte_size_(obj))
+#define _header_ptr(obj)  ((struct _header *)((obj)->buf))
+#define _parent_ptr(obj)  (_header_ptr(obj)->parent)
+#define _table_ptr(obj)  ((struct _entry *)((obj)->buf + sizeof(struct _header)))
+#define _content_ptr(obj) ((obj)->buf + sizeof(struct _header) + _table_byte_size(obj))
 
 
 // pointer,size, and index functions
-#define idx_in_parent_(obj)  (header_ptr_(obj)->parent_entry_idx)
+#define _idx_in_parent(obj)  (_header_ptr(obj)->parent_entry_idx)
 
-#define buf_size_(obj)  (header_ptr_(obj)->buf_size)
+#define _buf_size(obj)  (_header_ptr(obj)->buf_size)
 
-#define buf_idx_(obj)   (header_ptr_(obj)->buf_idx)
+#define _buf_idx(obj)   (_header_ptr(obj)->buf_idx)
 
-#define table_size_(obj)    (header_ptr_(obj)->table_size)
+#define _table_size(obj)    (_header_ptr(obj)->table_size)
 
-#define entry_count_(obj)   (header_ptr_(obj)->entry_count)
+#define _entry_count(obj)   (_header_ptr(obj)->entry_count)
 
-static inline size_t table_byte_size_(json_t *obj)
+static inline size_t _table_byte_size(json_t *obj)
 {
-    return header_ptr_(obj)->table_size * sizeof(struct entry_);
+    return _header_ptr(obj)->table_size * sizeof(struct _entry);
 }
 
-static inline size_t content_byte_size_(json_t *obj)
+static inline size_t _content_byte_size(json_t *obj)
 {
-    return header_ptr_(obj)->buf_size -
-        (sizeof(struct header_) + header_ptr_(obj)->table_size * sizeof(struct entry_));
+    return _header_ptr(obj)->buf_size -
+        (sizeof(struct _header) + _header_ptr(obj)->table_size * sizeof(struct _entry));
 }
 
 

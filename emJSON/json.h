@@ -23,10 +23,9 @@ typedef uint8_t json_type_t;
 	//#define JSON_BOOL		7
 	#define JSON_UNKNOWN	8
 
-typedef struct
-{
+typedef struct{
     void *buf;
-}json_t;
+} json_t;
 
 #ifdef __cplusplus
 extern "C"{

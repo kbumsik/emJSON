@@ -2,6 +2,7 @@
 *.md.html
 *.exe
 *.stackdump
+test.c
 
 ## Eclipse CDT
 .metadata/
