@@ -16,8 +16,9 @@ static struct _parse_ret _check_num(char *input);
 
 static int _insert(json_t *obj, struct _parse_ret *key, struct _parse_ret *value);
 
-static int _is_ws(char input);
+static inline int _is_ws(char input);
 static inline int _is_digit(char input);
+static inline int _is_char_match(char input, const char *char_list);
 
 #define _skip_while(i, exp) while (exp) i+=1
 #define _skip_if(i, exp) if (exp) i+=1
@@ -205,7 +206,7 @@ static struct _parse_ret _check_num(char *input)
             _skip_if(ret.j, *ret.j == '-');
             _skip_digit(ret.j);
             
-            if (*ret.j == '.' || *ret.j == 'e' || *ret.j == 'E') {
+            if (_is_char_match(*ret.j, ".eE")) {
                 state = decimal;
                 continue;
             }
@@ -224,7 +225,7 @@ static struct _parse_ret _check_num(char *input)
             _skip_digit(ret.j);
             
             // Exponent
-            if (*ret.j == 'e' || *ret.j == 'E') {
+            if (_is_char_match(*ret.j, "eE")) {
                 // Do noting yet.
                 ret.j += 1;
                 if (*ret.j == '-') {
@@ -360,7 +361,7 @@ int json_strlen(json_t *obj)
         		json_t tmp = {
         				.buf = entry->value_ptr
         		};
-        		str_len = json_strlen(&tmp);
+        		str_len = json_strlen(&tmp) - 1;    // TODO: Verify this
         	}
         	break;
         case JSON_NULL:
@@ -448,7 +449,7 @@ static int _insert(json_t *obj, struct _parse_ret *key, struct _parse_ret *value
 }
 
 
-static int _is_ws(char input)
+static inline int _is_ws(char input)
 {
     if (input == 0x20 || input == 0x09      // space, horizontal tab
         || input == 0x0a || input == 0x0d) {  // LF/NL, CR
@@ -463,6 +464,16 @@ static inline int _is_digit(char input)
         return 1;
     }
     else return 0;
+}
+
+static inline int _is_char_match(char input, const char *char_list)
+{
+    for (; *char_list != '\0'; char_list++) {
+        if (input == *char_list) {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 /*******************************************************************************
